@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Job - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Post a New Construction Job
+                    </h3>
+                </div>
+                
+                <div class="card-body p-4">
+                    <form method="POST">
+                        <div class="row g-3">
+                            <!-- Job Title -->
+                            <div class="col-12">
+                                <label for="title" class="form-label">Job Title</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       placeholder="e.g., Kitchen Renovation, House Construction, Plumbing Repair" required>
+                                <div class="form-text">Be specific about what work needs to be done</div>
+                            </div>
+                            
+                            <!-- Job Description -->
+                            <div class="col-12">
+                                <label for="description" class="form-label">Job Description</label>
+                                <textarea class="form-control" id="description" name="description" rows="5" 
+                                          placeholder="Describe the project in detail, including materials, timeline, and any specific requirements..." required></textarea>
+                                <div class="form-text">Include as much detail as possible to get accurate matches</div>
+                            </div>
+                            
+                            <!-- Required Skills -->
+                            <div class="col-12">
+                                <label for="required_skills" class="form-label">Required Skills</label>
+                                <textarea class="form-control" id="required_skills" name="required_skills" rows="3"
+                                          placeholder="e.g., plumbing, electrical work, carpentry, concrete work, painting..."></textarea>
+                                <div class="form-text">List the specific skills needed for this job</div>
+                            </div>
+                            
+                            <!-- Location and Profession Type -->
+                            <div class="col-md-6">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       placeholder="City, State or Address">
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="profession_type" class="form-label">Looking for</label>
+                                <select class="form-select" id="profession_type" name="profession_type" required>
+                                    <option value="">Select profession type</option>
+                                    <option value="fundi">Fundi (Skilled Craftsperson)</option>
+                                    <option value="professional">Professional (Engineer/Architect)</option>
+                                    <option value="both">Both Fundi and Professional</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Budget Range -->
+                            <div class="col-12">
+                                <label class="form-label">Budget Range</label>
+                                <div class="row g-2">
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="budget_min" name="budget_min" 
+                                                   placeholder="Minimum" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2 text-center d-flex align-items-center justify-content-center">
+                                        <span class="text-muted">to</span>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="input-group">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" class="form-control" id="budget_max" name="budget_max" 
+                                                   placeholder="Maximum" step="0.01" min="0">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-text">Set a realistic budget range to attract suitable candidates</div>
+                            </div>
+                            
+                            <!-- Deadline -->
+                            <div class="col-md-6">
+                                <label for="deadline" class="form-label">Project Deadline (Optional)</label>
+                                <input type="date" class="form-control" id="deadline" name="deadline" 
+                                       min="{{ (moment().add(1, 'day')).format('YYYY-MM-DD') }}">
+                            </div>
+                            
+                            <!-- Job Posting Preview -->
+                            <div class="col-12">
+                                <hr>
+                                <h6 class="text-muted">Preview</h6>
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <div id="jobPreview">
+                                            <h6 class="text-muted">Job preview will appear here as you type...</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Submit -->
+                            <div class="col-12">
+                                <div class="d-flex gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg flex-fill">
+                                        <i class="fas fa-paper-plane me-2"></i>Post Job
+                                    </button>
+                                    <a href="{{ url_for('customer_dashboard') }}" class="btn btn-outline-secondary btn-lg">
+                                        <i class="fas fa-times me-2"></i>Cancel
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Live preview functionality
+function updatePreview() {
+    const title = document.getElementById('title').value || 'Job Title';
+    const description = document.getElementById('description').value || 'Job description...';
+    const location = document.getElementById('location').value || 'Location';
+    const profession = document.getElementById('profession_type').value || 'Any';
+    const budgetMin = document.getElementById('budget_min').value;
+    const budgetMax = document.getElementById('budget_max').value;
+    const deadline = document.getElementById('deadline').value;
+    
+    let budget = 'Budget TBD';
+    if (budgetMin && budgetMax) {
+        budget = `$${budgetMin} - $${budgetMax}`;
+    } else if (budgetMax) {
+        budget = `Up to $${budgetMax}`;
+    } else if (budgetMin) {
+        budget = `Starting from $${budgetMin}`;
+    }
+    
+    const previewHtml = `
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6 class="mb-0">${title}</h6>
+            <span class="badge bg-primary">New</span>
+        </div>
+        <p class="text-muted small mb-2">${description.substring(0, 100)}${description.length > 100 ? '...' : ''}</p>
+        <div class="row g-2 small text-muted">
+            <div class="col-md-4">
+                <i class="fas fa-map-marker-alt me-1"></i>${location}
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-user-tie me-1"></i>${profession}
+            </div>
+            <div class="col-md-4">
+                <i class="fas fa-dollar-sign me-1"></i>${budget}
+            </div>
+            ${deadline ? `<div class="col-md-4"><i class="fas fa-calendar me-1"></i>${deadline}</div>` : ''}
+        </div>
+    `;
+    
+    document.getElementById('jobPreview').innerHTML = previewHtml;
+}
+
+// Attach event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const inputs = ['title', 'description', 'location', 'profession_type', 'budget_min', 'budget_max', 'deadline'];
+    inputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', updatePreview);
+            element.addEventListener('change', updatePreview);
+        }
+    });
+    
+    // Set minimum date to tomorrow
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('deadline').min = tomorrow.toISOString().split('T')[0];
+    
+    updatePreview();
+});
+
+// Budget validation
+document.getElementById('budget_min').addEventListener('input', function() {
+    const min = parseFloat(this.value);
+    const maxField = document.getElementById('budget_max');
+    const max = parseFloat(maxField.value);
+    
+    if (min && max && min > max) {
+        maxField.value = min;
+    }
+});
+
+document.getElementById('budget_max').addEventListener('input', function() {
+    const max = parseFloat(this.value);
+    const minField = document.getElementById('budget_min');
+    const min = parseFloat(minField.value);
+    
+    if (min && max && max < min) {
+        minField.value = max;
+    }
+});
+</script>
+{% endblock %}

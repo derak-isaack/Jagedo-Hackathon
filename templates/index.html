@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">
+                    Connect. Build. Succeed.
+                </h1>
+                <p class="lead mb-4">
+                    The premier platform connecting construction professionals with customers. 
+                    Find skilled fundis and professionals for your construction projects, 
+                    or discover new opportunities as a service provider.
+                </p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-user-plus me-2"></i>Get Started
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg">
+                        Learn More
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="hero-icon">
+                    <i class="fas fa-hard-hat" style="font-size: 12rem; opacity: 0.8;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5">
+    <!-- Features Section -->
+    <section id="features" class="py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold">Why Choose ConstructPro?</h2>
+            <p class="lead text-muted">Advanced technology meets construction expertise</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="text-primary mb-3">
+                            <i class="fas fa-robot fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">AI-Powered Matching</h5>
+                        <p class="card-text">
+                            Our smart algorithm matches customers with the most suitable service providers 
+                            based on skills, experience, and project requirements.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="text-success mb-3">
+                            <i class="fas fa-shield-check fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Verified Professionals</h5>
+                        <p class="card-text">
+                            All service providers undergo thorough verification including AI-powered 
+                            document analysis and admin approval for your peace of mind.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="text-info mb-3">
+                            <i class="fas fa-magic fa-3x"></i>
+                        </div>
+                        <h5 class="card-title">Smart Autofill</h5>
+                        <p class="card-text">
+                            Service providers can automatically populate application forms using 
+                            their uploaded documents and profiles, saving time and effort.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="py-5 bg-light rounded">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">How It Works</h2>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card border-primary">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user-tie me-2"></i>For Customers
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="list-unstyled">
+                                <li class="mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">1</span>
+                                    Create an account and complete your profile
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">2</span>
+                                    Post your construction project with details and budget
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">3</span>
+                                    Review AI-matched service providers
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-primary rounded-pill me-2">4</span>
+                                    Select the best candidate for your project
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card border-success">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-hard-hat me-2"></i>For Service Providers
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="list-unstyled">
+                                <li class="mb-3">
+                                    <span class="badge bg-success rounded-pill me-2">1</span>
+                                    Register and upload your credentials
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-success rounded-pill me-2">2</span>
+                                    Get verified through AI and admin approval
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-success rounded-pill me-2">3</span>
+                                    Receive personalized job matches
+                                </li>
+                                <li class="mb-3">
+                                    <span class="badge bg-success rounded-pill me-2">4</span>
+                                    Apply with AI-assisted applications
+                                </li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-5">
+        <div class="row text-center g-4">
+            <div class="col-md-3">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <h3 class="text-primary fw-bold">1000+</h3>
+                        <p class="text-muted">Verified Professionals</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <h3 class="text-success fw-bold">500+</h3>
+                        <p class="text-muted">Completed Projects</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <h3 class="text-info fw-bold">95%</h3>
+                        <p class="text-muted">Match Accuracy</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0">
+                    <div class="card-body">
+                        <h3 class="text-warning fw-bold">24/7</h3>
+                        <p class="text-muted">AI Support</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-5 text-center">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-5">
+                <h2 class="card-title mb-4">Ready to Get Started?</h2>
+                <p class="card-text lead mb-4">
+                    Join thousands of construction professionals already using ConstructPro
+                </p>
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-rocket me-2"></i>Join Now
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

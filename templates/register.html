@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white text-center">
+                    <h2 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Create Your Account
+                    </h2>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="row g-3">
+                            <!-- Basic Information -->
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <input type="text" class="form-control" id="username" name="username" required>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email Address</label>
+                                <input type="email" class="form-control" id="email" name="email" required>
+                            </div>
+                            
+                            <div class="col-12">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                                <div class="form-text">Password should be at least 8 characters long</div>
+                            </div>
+                            
+                            <!-- Role Selection -->
+                            <div class="col-12">
+                                <label class="form-label">I am a:</label>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="card role-card" onclick="selectRole('customer')">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-briefcase fa-2x text-primary mb-2"></i>
+                                                <h6>Customer</h6>
+                                                <p class="small text-muted">Looking for construction services</p>
+                                                <input type="radio" name="role" value="customer" class="form-check-input" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="card role-card" onclick="selectRole('service_provider')">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-hard-hat fa-2x text-success mb-2"></i>
+                                                <h6>Service Provider</h6>
+                                                <p class="small text-muted">Offering construction services</p>
+                                                <input type="radio" name="role" value="service_provider" class="form-check-input" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <div class="card role-card" onclick="selectRole('admin')">
+                                            <div class="card-body text-center">
+                                                <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
+                                                <h6>Administrator</h6>
+                                                <p class="small text-muted">Platform management</p>
+                                                <input type="radio" name="role" value="admin" class="form-check-input" style="display: none;">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Service Provider Specific Fields -->
+                            <div id="provider-fields" class="col-12" style="display: none;">
+                                <hr>
+                                <h6 class="text-muted">Service Provider Details</h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label for="profession" class="form-label">Profession Type</label>
+                                        <select class="form-select" name="profession" id="profession">
+                                            <option value="fundi">Fundi (Skilled Craftsperson)</option>
+                                            <option value="professional">Professional (Engineer, Architect, etc.)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-info mt-3">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>Note:</strong> Service provider accounts require admin approval before you can start using the platform.
+                                </div>
+                            </div>
+                            
+                            <!-- Document Upload Section -->
+                            <div id="serviceProviderDocs" style="display: none;">
+                                <div class="col-12">
+                                    <h6 class="text-primary mb-3">
+                                        <i class="fas fa-file-upload me-2"></i>Upload Verification Documents (Optional but Recommended)
+                                    </h6>
+                                    <p class="text-muted small mb-3">Upload relevant documents to speed up your approval process. Our AI system will analyze these to verify your qualifications.</p>
+                                </div>
+                                
+                                <!-- Certificates -->
+                                <div class="col-md-6">
+                                    <label for="certificates" class="form-label">Certificates/Licenses</label>
+                                    <input type="file" class="form-control" id="certificates" name="certificates" 
+                                           accept=".pdf,.jpg,.jpeg,.png,.docx" multiple>
+                                    <div class="form-text">Upload trade certificates, licenses, or qualifications</div>
+                                </div>
+                                
+                                <!-- Portfolio -->
+                                <div class="col-md-6">
+                                    <label for="portfolio" class="form-label">Portfolio/Work Samples</label>
+                                    <input type="file" class="form-control" id="portfolio" name="portfolio" 
+                                           accept=".pdf,.jpg,.jpeg,.png,.docx" multiple>
+                                    <div class="form-text">Photos of completed projects or work samples</div>
+                                </div>
+                                
+                                <!-- ID Document -->
+                                <div class="col-md-6">
+                                    <label for="id_document" class="form-label">ID Document</label>
+                                    <input type="file" class="form-control" id="id_document" name="id_document" 
+                                           accept=".pdf,.jpg,.jpeg,.png">
+                                    <div class="form-text">National ID, passport, or driver's license</div>
+                                </div>
+                                
+                                <!-- Resume/CV -->
+                                <div class="col-md-6">
+                                    <label for="resume" class="form-label">Resume/CV</label>
+                                    <input type="file" class="form-control" id="resume" name="resume" 
+                                           accept=".pdf,.docx">
+                                    <div class="form-text">Your detailed work experience and background</div>
+                                </div>
+                                
+                                <div class="col-12">
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-robot me-2"></i>
+                                        <strong>AI Verification:</strong> Our construction expert AI will analyze your documents to speed up the approval process and reduce waiting time.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Terms and Submit -->
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="terms" required>
+                                    <label class="form-check-label" for="terms">
+                                        I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
+                                        and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <i class="fas fa-user-plus me-2"></i>Create Account
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <hr>
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? 
+                            <a href="{{ url_for('login') }}" class="text-decoration-none">Sign in here</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.role-card {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+.role-card:hover {
+    border-color: var(--bs-primary);
+    transform: translateY(-2px);
+}
+
+.role-card.selected {
+    border-color: var(--bs-primary);
+    background-color: rgba(var(--bs-primary-rgb), 0.1);
+}
+</style>
+
+<script>
+function selectRole(role) {
+    // Remove selection from all cards
+    document.querySelectorAll('.role-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Add selection to clicked card
+    event.currentTarget.classList.add('selected');
+    
+    // Set radio button value
+    document.querySelector(`input[value="${role}"]`).checked = true;
+    
+    // Show/hide service provider fields
+    const providerFields = document.getElementById('provider-fields');
+    const providerDocs = document.getElementById('serviceProviderDocs');
+    if (role === 'service_provider') {
+        providerFields.style.display = 'block';
+        providerDocs.style.display = 'block';
+    } else {
+        providerFields.style.display = 'none';
+        providerDocs.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

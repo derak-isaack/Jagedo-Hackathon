@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-cogs me-2"></i>
+                                Admin Dashboard
+                            </h2>
+                            <p class="mb-0 opacity-75">Manage service provider applications and platform oversight</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-dark fs-6">{{ pending_users|length }} Pending Applications</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ pending_users|length }}</h4>
+                    <p class="text-muted mb-0">Pending Applications</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ pending_users|length }}</h4>
+                    <p class="text-muted mb-0">Total Service Providers</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">0</h4>
+                    <p class="text-muted mb-0">Approved Today</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-robot fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">0</h4>
+                    <p class="text-muted mb-0">AI Verifications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Applications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-clock me-2"></i>Pending Service Provider Applications
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if pending_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Applicant</th>
+                                        <th>Profession</th>
+                                        <th>Applied</th>
+                                        <th>AI Assessment</th>
+                                        <th>Profile Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in pending_users %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar me-3">
+                                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ user.username }}</h6>
+                                                        <small class="text-muted">{{ user.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if user.service_provider_profile %}
+                                                    <span class="badge 
+                                                        {% if user.service_provider_profile.profession == 'fundi' %}bg-primary
+                                                        {% else %}bg-success{% endif %}">
+                                                        {{ user.service_provider_profile.profession|title }}
+                                                    </span>
+                                                    {% if user.service_provider_profile.specialization %}
+                                                        <br><small class="text-muted">{{ user.service_provider_profile.specialization }}</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">No profile</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <small>{{ user.created_at.strftime('%b %d, %Y') }}</small>
+                                                <br><small class="text-muted">{{ user.created_at.strftime('%I:%M %p') }}</small>
+                                            </td>
+                                            <td>
+                                                {% if user.service_provider_profile %}
+                                                    {% set profile = user.service_provider_profile %}
+                                                    {% if profile.ai_verification_score %}
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="me-2">
+                                                                {% if profile.ai_verification_score >= 0.8 %}
+                                                                    <i class="fas fa-check-circle text-success"></i>
+                                                                {% elif profile.ai_verification_score >= 0.6 %}
+                                                                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                                                                {% else %}
+                                                                    <i class="fas fa-times-circle text-danger"></i>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div>
+                                                                <strong>{{ (profile.ai_verification_score * 100)|round|int }}%</strong>
+                                                                <br>
+                                                                <small class="text-muted">
+                                                                    {% if profile.ai_verification_score >= 0.8 %}
+                                                                        AI Recommends: APPROVE
+                                                                    {% elif profile.ai_verification_score >= 0.6 %}
+                                                                        AI Recommends: REVIEW
+                                                                    {% else %}
+                                                                        AI Recommends: REJECT
+                                                                    {% endif %}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        {% if profile.ai_verification_notes %}
+                                                            <button class="btn btn-sm btn-outline-info mt-1" 
+                                                                    data-bs-toggle="modal" 
+                                                                    data-bs-target="#aiNotesModal{{ user.id }}">
+                                                                <i class="fas fa-eye"></i> AI Analysis
+                                                            </button>
+                                                        {% endif %}
+                                                    {% else %}
+                                                        <span class="text-muted">
+                                                            <i class="fas fa-robot"></i> Not assessed
+                                                        </span>
+                                                        <br>
+                                                        <small class="text-muted">Click "AI Verify" to analyze</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">No profile</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if user.service_provider_profile %}
+                                                    {% set profile = user.service_provider_profile %}
+                                                    {% if profile.verification_status == 'pending' %}
+                                                        <span class="badge bg-warning">Pending Review</span>
+                                                    {% elif profile.verification_status == 'verified' %}
+                                                        <span class="badge bg-success">
+                                                            AI Verified 
+                                                            {% if profile.ai_verification_score %}
+                                                                ({{ (profile.ai_verification_score * 100)|round|int }}%)
+                                                            {% endif %}
+                                                        </span>
+                                                    {% elif profile.verification_status == 'rejected' %}
+                                                        <span class="badge bg-danger">AI Rejected</span>
+                                                    {% endif %}
+                                                    
+                                                    {% if profile.documents.count() > 0 %}
+                                                        <br><small class="text-success">
+                                                            <i class="fas fa-paperclip me-1"></i>{{ profile.documents.count() }} documents
+                                                        </small>
+                                                    {% else %}
+                                                        <br><small class="text-muted">No documents</small>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="badge bg-secondary">Incomplete</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group-vertical btn-group-sm" role="group">
+                                                    <button class="btn btn-outline-info" onclick="viewProfile({{ user.id }})">
+                                                        <i class="fas fa-eye me-1"></i>View Profile
+                                                    </button>
+                                                    
+                                                    {% if user.service_provider_profile and user.service_provider_profile.verification_status == 'pending' %}
+                                                        <a href="{{ url_for('ai_verify_user', user_id=user.id) }}" 
+                                                           class="btn btn-outline-primary">
+                                                            <i class="fas fa-robot me-1"></i>AI Verify
+                                                        </a>
+                                                    {% endif %}
+                                                    
+                                                    <a href="{{ url_for('approve_user', user_id=user.id) }}" 
+                                                       class="btn btn-outline-success"
+                                                       onclick="return confirm('Approve this user?')">
+                                                        <i class="fas fa-check me-1"></i>Approve
+                                                    </a>
+                                                    
+                                                    <a href="{{ url_for('reject_user', user_id=user.id) }}" 
+                                                       class="btn btn-outline-danger"
+                                                       onclick="return confirm('Reject this application?')">
+                                                        <i class="fas fa-times me-1"></i>Reject
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5 class="text-success">All caught up!</h5>
+                            <p class="text-muted">No pending applications to review</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Profile View Modal -->
+<div class="modal fade" id="profileModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Service Provider Profile</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="profileContent">
+                    <div class="text-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading profile...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewProfile(userId) {
+    const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+    modal.show();
+    
+    // Here you would typically fetch profile data via AJAX
+    // For now, we'll show a placeholder
+    setTimeout(() => {
+        document.getElementById('profileContent').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                Profile viewing feature requires additional API endpoint implementation.
+                User ID: ${userId}
+            </div>
+        `;
+    }, 1000);
+}
+
+// Auto-refresh pending count every 30 seconds
+setInterval(() => {
+    // In a real implementation, you'd fetch updated counts via AJAX
+    console.log('Checking for new applications...');
+}, 30000);
+</script>
+{% endblock %}

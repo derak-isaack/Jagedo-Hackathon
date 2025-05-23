@@ -1,0 +1,346 @@
+{% extends "base.html" %}
+
+{% block title %}Service Provider Dashboard - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Dashboard Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-hard-hat me-2"></i>
+                                Welcome back, {{ current_user.username }}!
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                Find construction opportunities tailored to your skills
+                                {% if current_user.service_provider_profile %}
+                                    ({{ current_user.service_provider_profile.profession|title }})
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('profile') }}" class="btn btn-light btn-lg">
+                                <i class="fas fa-user-edit me-2"></i>Edit Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-bullseye fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">{{ matches|length }}</h4>
+                    <p class="text-muted mb-0">Job Matches</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-paper-plane fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ applications|length }}</h4>
+                    <p class="text-muted mb-0">Applications Sent</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ applications|selectattr('status', 'equalto', 'accepted')|list|length }}</h4>
+                    <p class="text-muted mb-0">Accepted</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clock fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ applications|selectattr('status', 'equalto', 'pending')|list|length }}</h4>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Job Matches -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-bullseye me-2"></i>Recommended Jobs
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    {% if matches %}
+                        {% for match in matches %}
+                            <div class="card mb-3 border-start border-4 border-primary">
+                                <div class="card-body">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-1">{{ match.job.title }}</h6>
+                                                <div class="d-flex align-items-center">
+                                                    <span class="badge bg-primary me-2">
+                                                        {{ (match.match_score * 100)|round|int }}% Match
+                                                    </span>
+                                                    <div class="progress" style="width: 60px; height: 8px;">
+                                                        <div class="progress-bar" role="progressbar" 
+                                                             style="width: {{ (match.match_score * 100)|round|int }}%"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="card-text text-muted small mb-2">
+                                                {{ match.job.description[:120] }}{% if match.job.description|length > 120 %}...{% endif %}
+                                            </p>
+                                            
+                                            <div class="row g-2 small text-muted">
+                                                <div class="col-md-4">
+                                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                                    {{ match.job.location or 'Not specified' }}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <i class="fas fa-dollar-sign me-1"></i>
+                                                    {% if match.job.budget_min and match.job.budget_max %}
+                                                        ${{ match.job.budget_min }}-{{ match.job.budget_max }}
+                                                    {% elif match.job.budget_max %}
+                                                        Up to ${{ match.job.budget_max }}
+                                                    {% else %}
+                                                        Budget TBD
+                                                    {% endif %}
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <i class="fas fa-calendar me-1"></i>
+                                                    {{ match.job.created_at.strftime('%b %d') }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-4 text-end">
+                                            <div class="d-flex flex-column gap-2">
+                                                <a href="{{ url_for('job_detail', job_id=match.job.id) }}" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="fas fa-eye me-1"></i>View Job
+                                                </a>
+                                                {% set user_application = match.job.applications.filter_by(applicant_id=current_user.id).first() %}
+                                                {% if not user_application %}
+                                                    <button class="btn btn-primary btn-sm" 
+                                                            onclick="quickApply({{ match.job.id }})">
+                                                        <i class="fas fa-paper-plane me-1"></i>Quick Apply
+                                                    </button>
+                                                {% else %}
+                                                    <span class="badge bg-success">Applied</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                            <h6 class="text-muted">No job matches found</h6>
+                            <p class="text-muted small">Complete your profile to get better matches</p>
+                            <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-user-edit me-1"></i>Update Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Applications
+                    </h6>
+                </div>
+                
+                <div class="card-body">
+                    {% if applications[:5] %}
+                        {% for application in applications[:5] %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1 small">Job #{{ application.job.id }}: {{ application.job.title }}</h6>
+                                    <p class="text-muted small mb-1">
+                                        Applied {{ application.created_at.strftime('%b %d') }} • Anonymous Client
+                                    </p>
+                                    <span class="badge 
+                                        {% if application.status == 'pending' %}bg-warning
+                                        {% elif application.status == 'accepted' %}bg-success
+                                        {% else %}bg-danger{% endif %} small">
+                                        {{ application.status|title }}
+                                    </span>
+                                </div>
+                                <a href="{{ url_for('job_detail', job_id=application.job.id) }}" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
+                            {% if not loop.last %}<hr>{% endif %}
+                        {% endfor %}
+                        
+                        {% if applications|length > 5 %}
+                            <div class="text-center mt-3">
+                                <small class="text-muted">And {{ applications|length - 5 }} more applications</small>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                            <p class="text-muted small mb-0">No applications yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Profile Completion -->
+            {% if current_user.service_provider_profile %}
+                {% set profile = current_user.service_provider_profile %}
+                {% set completion = 0 %}
+                {% if profile.specialization %}{% set completion = completion + 20 %}{% endif %}
+                {% if profile.experience_years %}{% set completion = completion + 20 %}{% endif %}
+                {% if profile.skills %}{% set completion = completion + 20 %}{% endif %}
+                {% if profile.location %}{% set completion = completion + 20 %}{% endif %}
+                {% if profile.bio %}{% set completion = completion + 20 %}{% endif %}
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>Profile Completion
+                        </h6>
+                    </div>
+                    
+                    <div class="card-body">
+                        <div class="progress mb-2">
+                            <div class="progress-bar" role="progressbar" style="width: {{ completion }}%">
+                                {{ completion }}%
+                            </div>
+                        </div>
+                        
+                        {% if completion < 100 %}
+                            <small class="text-muted">Complete your profile to get better job matches</small>
+                            <div class="mt-2">
+                                <a href="{{ url_for('profile') }}" class="btn btn-outline-primary btn-sm w-100">
+                                    <i class="fas fa-edit me-1"></i>Complete Profile
+                                </a>
+                            </div>
+                        {% else %}
+                            <small class="text-success">
+                                <i class="fas fa-check me-1"></i>Profile is complete!
+                            </small>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Apply Modal -->
+<div class="modal fade" id="quickApplyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Quick Apply</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="quickApplyForm" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Cover Letter</label>
+                        <textarea class="form-control" name="cover_letter" rows="4" required></textarea>
+                        <div class="form-text">
+                            <button type="button" class="btn btn-link btn-sm p-0" onclick="autofillApplication()">
+                                <i class="fas fa-magic me-1"></i>Auto-fill from profile
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label class="form-label">Proposed Rate ($)</label>
+                            <input type="number" class="form-control" name="proposed_rate" step="0.01">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Estimated Duration</label>
+                            <input type="text" class="form-control" name="estimated_duration" placeholder="e.g., 2 weeks">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>Submit Application
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentJobId = null;
+
+function quickApply(jobId) {
+    currentJobId = jobId;
+    document.getElementById('quickApplyForm').action = `/job/${jobId}/apply`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('quickApplyModal'));
+    modal.show();
+}
+
+function autofillApplication() {
+    if (!currentJobId) return;
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    button.disabled = true;
+    
+    fetch(`/job/${currentJobId}/autofill`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Autofill failed: ' + data.error);
+            } else {
+                document.querySelector('textarea[name="cover_letter"]').value = data.cover_letter || '';
+                if (data.proposed_rate) {
+                    document.querySelector('input[name="proposed_rate"]').value = data.proposed_rate;
+                }
+                if (data.estimated_duration) {
+                    document.querySelector('input[name="estimated_duration"]').value = data.estimated_duration;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Autofill failed. Please try again.');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+</script>
+{% endblock %}

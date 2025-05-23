@@ -1,0 +1,381 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Job Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-2">
+                                    <li class="breadcrumb-item">
+                                        <a href="{% if current_user.role == 'customer' %}{{ url_for('customer_dashboard') }}{% else %}{{ url_for('service_provider_dashboard') }}{% endif %}">
+                                            Dashboard
+                                        </a>
+                                    </li>
+                                    <li class="breadcrumb-item active">{{ job.title }}</li>
+                                </ol>
+                            </nav>
+                            
+                            {% if current_user.role == 'service_provider' %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-info me-2">Job ID: #{{ job.id }}</span>
+                                    <span class="text-muted small">Construction Job Opportunity</span>
+                                </div>
+                                <h2 class="mb-2">{{ job.title }}</h2>
+                            {% else %}
+                                <h2 class="mb-2">{{ job.title }}</h2>
+                            {% endif %}
+                            
+                            <div class="row g-2 text-muted small">
+                                <div class="col-md-3">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    {{ job.location or 'Location not specified' }}
+                                </div>
+                                <div class="col-md-3">
+                                    <i class="fas fa-user-tie me-1"></i>
+                                    {{ job.profession_type|title if job.profession_type else 'Any profession' }}
+                                </div>
+                                {% if current_user.role != 'service_provider' %}
+                                <div class="col-md-3">
+                                    <i class="fas fa-calendar me-1"></i>
+                                    Posted {{ job.created_at.strftime('%b %d, %Y') }}
+                                </div>
+                                <div class="col-md-3">
+                                    <i class="fas fa-users me-1"></i>
+                                    {{ job.applications.count() }} applications
+                                </div>
+                                {% else %}
+                                <div class="col-md-3">
+                                    <i class="fas fa-shield-alt me-1"></i>
+                                    Anonymous Client
+                                </div>
+                                <div class="col-md-3">
+                                    <i class="fas fa-eye-slash me-1"></i>
+                                    Privacy Protected
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4 text-md-end">
+                            <div class="mb-2">
+                                <span class="badge 
+                                    {% if job.status == 'open' %}bg-success
+                                    {% elif job.status == 'in_progress' %}bg-warning
+                                    {% elif job.status == 'completed' %}bg-primary
+                                    {% else %}bg-secondary{% endif %} fs-6">
+                                    {{ job.status|title }}
+                                </span>
+                            </div>
+                            
+                            {% if job.budget_min and job.budget_max %}
+                                <h4 class="text-success mb-0">${{ job.budget_min }} - ${{ job.budget_max }}</h4>
+                            {% elif job.budget_max %}
+                                <h4 class="text-success mb-0">Up to ${{ job.budget_max }}</h4>
+                            {% else %}
+                                <h4 class="text-muted mb-0">Budget TBD</h4>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Job Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Job Description
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <p class="mb-0">{{ job.description|nl2br }}</p>
+                    </div>
+                    
+                    {% if job.required_skills %}
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">Required Skills</h6>
+                            <div class="skills-container">
+                                {% for skill in job.required_skills.split(',') %}
+                                    <span class="badge bg-primary me-1 mb-1">{{ skill.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    {% if job.deadline %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-clock me-2"></i>
+                            <strong>Deadline:</strong> {{ job.deadline.strftime('%B %d, %Y') }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Applications Section (for customers) -->
+            {% if current_user.role == 'customer' and job.customer_id == current_user.id %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-paper-plane me-2"></i>Applications ({{ applications|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% if applications %}
+                            {% for application in applications %}
+                                <div class="card mb-3 border-start border-4 
+                                    {% if application.status == 'pending' %}border-warning
+                                    {% elif application.status == 'accepted' %}border-success
+                                    {% else %}border-danger{% endif %}">
+                                    
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-8">
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <h6 class="mb-0 me-3">{{ application.applicant.username }}</h6>
+                                                    <span class="badge 
+                                                        {% if application.status == 'pending' %}bg-warning
+                                                        {% elif application.status == 'accepted' %}bg-success
+                                                        {% else %}bg-danger{% endif %}">
+                                                        {{ application.status|title }}
+                                                    </span>
+                                                    {% if application.ai_autofilled %}
+                                                        <span class="badge bg-info ms-2">
+                                                            <i class="fas fa-robot me-1"></i>AI Assisted
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                
+                                                <p class="text-muted small mb-2">{{ application.applicant.email }}</p>
+                                                
+                                                {% if application.applicant.service_provider_profile %}
+                                                    {% set profile = application.applicant.service_provider_profile %}
+                                                    <div class="row g-2 small text-muted">
+                                                        <div class="col-md-4">
+                                                            <i class="fas fa-briefcase me-1"></i>
+                                                            {{ profile.profession|title }}
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <i class="fas fa-star me-1"></i>
+                                                            {{ profile.experience_years or 0 }} years
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <i class="fas fa-map-marker-alt me-1"></i>
+                                                            {{ profile.location or 'Not specified' }}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="col-md-4 text-end">
+                                                {% if application.proposed_rate %}
+                                                    <h6 class="text-success mb-1">${{ application.proposed_rate }}/hr</h6>
+                                                {% endif %}
+                                                {% if application.estimated_duration %}
+                                                    <small class="text-muted d-block">{{ application.estimated_duration }}</small>
+                                                {% endif %}
+                                                <small class="text-muted">Applied {{ application.created_at.strftime('%b %d') }}</small>
+                                            </div>
+                                        </div>
+                                        
+                                        {% if application.cover_letter %}
+                                            <div class="mt-3">
+                                                <h6 class="text-muted small">Cover Letter:</h6>
+                                                <p class="small">{{ application.cover_letter }}</p>
+                                            </div>
+                                        {% endif %}
+                                        
+                                        {% if application.status == 'pending' %}
+                                            <div class="mt-3 d-flex gap-2">
+                                                <button class="btn btn-success btn-sm" onclick="updateApplicationStatus({{ application.id }}, 'accepted')">
+                                                    <i class="fas fa-check me-1"></i>Accept
+                                                </button>
+                                                <button class="btn btn-danger btn-sm" onclick="updateApplicationStatus({{ application.id }}, 'rejected')">
+                                                    <i class="fas fa-times me-1"></i>Reject
+                                                </button>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center py-4">
+                                <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                <h6 class="text-muted">No applications yet</h6>
+                                <p class="text-muted">Applications will appear here as service providers apply</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Application Form (for service providers) -->
+            {% if current_user.role == 'service_provider' %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            {% if user_application %}
+                                <i class="fas fa-check-circle me-2"></i>Your Application
+                            {% else %}
+                                <i class="fas fa-paper-plane me-2"></i>Apply for this Job
+                            {% endif %}
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if user_application %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                You applied on {{ user_application.created_at.strftime('%B %d, %Y') }}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <strong>Status:</strong>
+                                <span class="badge 
+                                    {% if user_application.status == 'pending' %}bg-warning
+                                    {% elif user_application.status == 'accepted' %}bg-success
+                                    {% else %}bg-danger{% endif %} ms-2">
+                                    {{ user_application.status|title }}
+                                </span>
+                            </div>
+                            
+                            {% if user_application.proposed_rate %}
+                                <div class="mb-2">
+                                    <strong>Your Rate:</strong> ${{ user_application.proposed_rate }}/hr
+                                </div>
+                            {% endif %}
+                            
+                            {% if user_application.estimated_duration %}
+                                <div class="mb-2">
+                                    <strong>Estimated Duration:</strong> {{ user_application.estimated_duration }}
+                                </div>
+                            {% endif %}
+                        {% else %}
+                            <form method="POST" action="{{ url_for('apply_job', job_id=job.id) }}">
+                                <div class="mb-3">
+                                    <label class="form-label">Cover Letter</label>
+                                    <textarea class="form-control" name="cover_letter" rows="4" 
+                                              placeholder="Explain why you're the right fit for this job..." required></textarea>
+                                    <div class="form-text">
+                                        <button type="button" class="btn btn-link btn-sm p-0" onclick="autofillApplication()">
+                                            <i class="fas fa-magic me-1"></i>Auto-fill from profile
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Your Rate ($/hr)</label>
+                                        <input type="number" class="form-control" name="proposed_rate" step="0.01" min="0">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Duration</label>
+                                        <input type="text" class="form-control" name="estimated_duration" 
+                                               placeholder="e.g., 2 weeks">
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-paper-plane me-2"></i>Submit Application
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Job Information -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-info me-2"></i>Job Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Job ID:</strong> #{{ job.id }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Posted by:</strong> {{ job.customer.username }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Posted on:</strong> {{ job.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    </div>
+                    
+                    {% if job.updated_at != job.created_at %}
+                        <div class="mb-3">
+                            <strong>Last updated:</strong> {{ job.updated_at.strftime('%B %d, %Y') }}
+                        </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Applications:</strong> {{ job.applications.count() }}
+                    </div>
+                    
+                    {% if job.matches.count() > 0 %}
+                        <div class="mb-3">
+                            <strong>AI Matches:</strong> {{ job.matches.count() }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function autofillApplication() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Generating...';
+    button.disabled = true;
+    
+    fetch(`{{ url_for('autofill_application', job_id=job.id) }}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Autofill failed: ' + data.error);
+            } else {
+                if (data.cover_letter) {
+                    document.querySelector('textarea[name="cover_letter"]').value = data.cover_letter;
+                }
+                if (data.proposed_rate) {
+                    document.querySelector('input[name="proposed_rate"]').value = data.proposed_rate;
+                }
+                if (data.estimated_duration) {
+                    document.querySelector('input[name="estimated_duration"]').value = data.estimated_duration;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Autofill failed. Please try again.');
+        })
+        .finally(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        });
+}
+
+function updateApplicationStatus(applicationId, status) {
+    if (confirm(`Are you sure you want to ${status} this application?`)) {
+        // In a real implementation, this would make an AJAX call to update the status
+        alert(`Feature not implemented: Would ${status} application ${applicationId}`);
+    }
+}
+</script>
+{% endblock %}

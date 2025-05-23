@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Profile Form -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-edit me-2"></i>
+                        {% if current_user.role == 'service_provider' %}Service Provider Profile
+                        {% elif current_user.role == 'customer' %}Customer Profile
+                        {% else %}Admin Profile{% endif %}
+                    </h5>
+                </div>
+                
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-3">Basic Information</h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Username</label>
+                                <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                            </div>
+                        </div>
+
+                        <!-- Service Provider Specific Fields -->
+                        {% if current_user.role == 'service_provider' %}
+                            {% set profile = current_user.service_provider_profile %}
+                            
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted border-bottom pb-2 mb-3">Professional Information</h6>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="specialization" class="form-label">Specialization</label>
+                                    <input type="text" class="form-control" id="specialization" name="specialization" 
+                                           value="{{ profile.specialization if profile else '' }}"
+                                           placeholder="e.g., Residential Plumbing, Commercial Electrical">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="experience_years" class="form-label">Years of Experience</label>
+                                    <input type="number" class="form-control" id="experience_years" name="experience_years" 
+                                           value="{{ profile.experience_years if profile else '' }}" min="0" max="50">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="skills" class="form-label">Skills</label>
+                                    <textarea class="form-control" id="skills" name="skills" rows="3"
+                                              placeholder="List your skills separated by commas (e.g., plumbing, electrical, carpentry)">{{ profile.skills if profile else '' }}</textarea>
+                                    <div class="form-text">Separate skills with commas for better job matching</div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           value="{{ profile.location if profile else '' }}"
+                                           placeholder="City, State">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="hourly_rate" class="form-label">Hourly Rate ($)</label>
+                                    <input type="number" class="form-control" id="hourly_rate" name="hourly_rate" 
+                                           value="{{ profile.hourly_rate if profile else '' }}" step="0.01" min="0">
+                                </div>
+                                
+                                <div class="col-12">
+                                    <label for="bio" class="form-label">Professional Bio</label>
+                                    <textarea class="form-control" id="bio" name="bio" rows="4"
+                                              placeholder="Tell potential customers about your experience, approach to work, and what makes you unique...">{{ profile.bio if profile else '' }}</textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- Verification Status -->
+                            {% if profile %}
+                                <div class="row mb-4">
+                                    <div class="col-12">
+                                        <h6 class="text-muted border-bottom pb-2 mb-3">Verification Status</h6>
+                                        
+                                        <div class="alert 
+                                            {% if current_user.is_approved %}alert-success
+                                            {% else %}alert-warning{% endif %}">
+                                            <div class="row align-items-center">
+                                                <div class="col-md-8">
+                                                    <h6 class="mb-1">
+                                                        {% if current_user.is_approved %}
+                                                            <i class="fas fa-check-circle me-2"></i>Account Approved
+                                                        {% else %}
+                                                            <i class="fas fa-clock me-2"></i>Pending Approval
+                                                        {% endif %}
+                                                    </h6>
+                                                    <p class="mb-0 small">
+                                                        {% if current_user.is_approved %}
+                                                            Your account has been approved and you can start applying for jobs.
+                                                        {% else %}
+                                                            Your account is pending admin approval. You'll be notified once approved.
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    {% if profile.verification_status == 'verified' %}
+                                                        <span class="badge bg-success">AI Verified</span>
+                                                    {% elif profile.verification_status == 'rejected' %}
+                                                        <span class="badge bg-danger">AI Rejected</span>
+                                                    {% else %}
+                                                        <span class="badge bg-warning">Pending Review</span>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                        <!-- Customer Specific Fields -->
+                        {% elif current_user.role == 'customer' %}
+                            {% set profile = current_user.customer_profile %}
+                            
+                            <div class="row mb-4">
+                                <div class="col-12">
+                                    <h6 class="text-muted border-bottom pb-2 mb-3">Customer Information</h6>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="company_name" class="form-label">Company Name (Optional)</label>
+                                    <input type="text" class="form-control" id="company_name" name="company_name" 
+                                           value="{{ profile.company_name if profile else '' }}"
+                                           placeholder="Your company or organization">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" name="phone" 
+                                           value="{{ profile.phone if profile else '' }}"
+                                           placeholder="(555) 123-4567">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="location" class="form-label">Location</label>
+                                    <input type="text" class="form-control" id="location" name="location" 
+                                           value="{{ profile.location if profile else '' }}"
+                                           placeholder="City, State">
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <label for="preferred_budget_range" class="form-label">Typical Budget Range</label>
+                                    <select class="form-select" id="preferred_budget_range" name="preferred_budget_range">
+                                        <option value="">Select range</option>
+                                        <option value="under-1000" {{ 'selected' if profile and profile.preferred_budget_range == 'under-1000' }}>Under $1,000</option>
+                                        <option value="1000-5000" {{ 'selected' if profile and profile.preferred_budget_range == '1000-5000' }}>$1,000 - $5,000</option>
+                                        <option value="5000-10000" {{ 'selected' if profile and profile.preferred_budget_range == '5000-10000' }}>$5,000 - $10,000</option>
+                                        <option value="10000-25000" {{ 'selected' if profile and profile.preferred_budget_range == '10000-25000' }}>$10,000 - $25,000</option>
+                                        <option value="25000-50000" {{ 'selected' if profile and profile.preferred_budget_range == '25000-50000' }}>$25,000 - $50,000</option>
+                                        <option value="over-50000" {{ 'selected' if profile and profile.preferred_budget_range == 'over-50000' }}>Over $50,000</option>
+                                    </select>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Submit Button -->
+                        <div class="row">
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Profile
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Document Upload (Service Providers only) -->
+            {% if current_user.role == 'service_provider' %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="fas fa-paperclip me-2"></i>Documents
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">
+                            Upload certificates, portfolios, or ID documents to improve your verification score
+                        </p>
+                        
+                        <form id="documentForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="document_type" class="form-label">Document Type</label>
+                                <select class="form-select" id="document_type" name="document_type" required>
+                                    <option value="">Select type</option>
+                                    <option value="certificate">Certificate</option>
+                                    <option value="portfolio">Portfolio</option>
+                                    <option value="resume">Resume/CV</option>
+                                    <option value="id">ID Document</option>
+                                    <option value="general">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Choose File</label>
+                                <input type="file" class="form-control" id="file" name="file" 
+                                       accept=".pdf,.doc,.docx,.txt" required>
+                                <div class="form-text">Supported: PDF, DOC, DOCX, TXT (max 16MB)</div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-upload me-2"></i>Upload Document
+                            </button>
+                        </form>
+                        
+                        <!-- Uploaded Documents -->
+                        {% if current_user.service_provider_profile and current_user.service_provider_profile.documents %}
+                            <hr>
+                            <h6 class="text-muted small">Uploaded Documents</h6>
+                            {% for doc in current_user.service_provider_profile.documents %}
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div>
+                                        <small class="d-block">{{ doc.original_filename }}</small>
+                                        <small class="text-muted">{{ doc.document_type|title }}</small>
+                                    </div>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-check"></i>
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Profile Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Profile Stats
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Member since</span>
+                            <span>{{ current_user.created_at.strftime('%b %Y') }}</span>
+                        </div>
+                    </div>
+                    
+                    {% if current_user.role == 'service_provider' %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Applications sent</span>
+                                <span>{{ current_user.applications.count() }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Job matches</span>
+                                <span>{{ current_user.matches.count() if current_user.matches else 0 }}</span>
+                            </div>
+                        </div>
+                        
+                        {% if current_user.service_provider_profile %}
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Documents uploaded</span>
+                                    <span>{{ current_user.service_provider_profile.documents.count() }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                    {% elif current_user.role == 'customer' %}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Jobs posted</span>
+                                <span>{{ current_user.jobs_posted.count() }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between">
+                                <span>Active jobs</span>
+                                <span>{{ current_user.jobs_posted.filter_by(status='open').count() }}</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Document upload handler
+document.getElementById('documentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Uploading...';
+    submitBtn.disabled = true;
+    
+    fetch('/upload-document', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Document uploaded and processed successfully!');
+            location.reload(); // Refresh to show updated documents
+        } else {
+            alert('Upload failed: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Upload failed. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+
+// Form validation
+document.querySelector('form[method="POST"]').addEventListener('submit', function(e) {
+    // Add any client-side validation here
+    console.log('Saving profile...');
+});
+</script>
+{% endblock %}
