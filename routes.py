@@ -5,10 +5,11 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, s
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from app import app, db
-from models import User, ServiceProviderProfile, CustomerProfile, Job, JobApplication, JobMatch, Document, Notification
+from models import User, ServiceProviderProfile, CustomerProfile, Job, JobApplication, JobMatch, UserRole,Document, Notification, Message, ServiceProviderConnection
 from ai_agents import AIVerificationAgent, AutofillAgent
 from matching_engine import JobMatchingEngine
 from document_processor import DocumentProcessor
+from sqlalchemy import or_
 
 # Initialize AI agents
 ai_verification = AIVerificationAgent()
@@ -27,14 +28,25 @@ def index():
             return redirect(url_for('admin_dashboard'))
     return render_template('index.html')
 
+from models import UserRole
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        role = request.form['role']
+        role_input = request.form['role']  # 'customer', 'fundi', 'professional', 'admin'
         
+        # Validate role
+        role_input = request.form.get('role')
+        try:
+            role_enum = UserRole(role_input)
+        except ValueError:
+            print(f"[ERROR] Invalid role input: {role_input}")  # optional debug print
+            flash('Invalid user role selected.', 'error')
+            return render_template('register.html')
+
         # Check if user already exists
         if User.query.filter_by(username=username).first():
             flash('Username already exists', 'error')
@@ -43,53 +55,51 @@ def register():
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
             return render_template('register.html')
-        
-        # Create new user
-        user = User(username=username, email=email, role=role)
+
+        # Create user
+        user = User(username=username, email=email, role=role_enum)
         user.set_password(password)
-        
-        # Auto-approve customers and admins
-        if role in ['customer', 'admin']:
+
+        # Auto-approve customer and admin
+        if role_enum in [UserRole.customer, UserRole.admin]:
             user.is_approved = True
-        
+
         db.session.add(user)
         db.session.commit()
-        
-        # Create role-specific profiles
-        if role == 'customer':
+
+        # Create profile depending on role
+        if role_enum == UserRole.customer:
             profile = CustomerProfile(user_id=user.id)
             db.session.add(profile)
-        elif role == 'service_provider':
-            profile = ServiceProviderProfile(user_id=user.id, profession=request.form.get('profession', 'fundi'))
+
+        elif role_enum in [UserRole.fundi, UserRole.proffesional]:
+            profession = request.form.get('profession', role_enum.value)
+            profile = ServiceProviderProfile(user_id=user.id, profession=profession)
             db.session.add(profile)
-            db.session.commit()  # Commit to get profile ID
-            
-            # Handle file uploads during registration
+            db.session.commit()
+
+            # Document handling
             document_types = ['certificates', 'portfolio', 'id_document', 'resume']
             uploaded_documents = []
-            
+
             for doc_type in document_types:
                 if doc_type in request.files:
                     files = request.files.getlist(doc_type)
                     for file in files:
-                        if file and file.filename and file.filename != '':
+                        if file and file.filename:
                             try:
-                                # Secure filename and save
                                 filename = secure_filename(file.filename)
                                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
                                 filename = timestamp + filename
-                                
-                                # Ensure upload directory exists
+
                                 upload_dir = app.config.get('UPLOAD_FOLDER', 'uploads')
                                 os.makedirs(upload_dir, exist_ok=True)
                                 file_path = os.path.join(upload_dir, filename)
                                 file.save(file_path)
-                                
-                                # Process document with AI
+
                                 extracted_text = doc_processor.extract_text(file_path)
                                 ai_analysis = doc_processor.analyze_document(extracted_text, doc_type)
-                                
-                                # Save document record
+
                                 document = Document(
                                     service_provider_id=profile.id,
                                     filename=filename,
@@ -101,22 +111,22 @@ def register():
                                 )
                                 db.session.add(document)
                                 uploaded_documents.append(doc_type)
-                                
-                            except Exception as e:
-                                # Continue processing other files if one fails
+
+                            except Exception:
                                 continue
-            
+
             db.session.commit()
-            
+
             if uploaded_documents:
                 flash(f'Registration successful! Documents uploaded: {", ".join(uploaded_documents)}. Your application is being processed by our AI system.', 'success')
             else:
                 flash('Registration successful! Your application is pending admin approval.', 'success')
+        
         else:
             flash('Registration successful! You can now log in.', 'success')
-            
+
         return redirect(url_for('login'))
-    
+
     return render_template('register.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -128,7 +138,8 @@ def login():
         user = User.query.filter_by(username=username).first()
         
         if user and user.check_password(password):
-            if not user.is_approved and user.role == 'service_provider':
+            # Check approval status only for service providers (fundi and professional)
+            if not user.is_approved and user.role in [UserRole.fundi, UserRole.proffesional]:
                 flash('Your account is pending approval. Please wait for admin verification.', 'warning')
                 return render_template('login.html')
             
@@ -136,11 +147,11 @@ def login():
             flash('Login successful!', 'success')
             
             # Redirect based on role
-            if user.role == 'customer':
+            if user.role == UserRole.customer:
                 return redirect(url_for('customer_dashboard'))
-            elif user.role == 'service_provider':
+            elif user.role in [UserRole.fundi, UserRole.proffesional]:
                 return redirect(url_for('service_provider_dashboard'))
-            elif user.role == 'admin':
+            elif user.role == UserRole.admin:
                 return redirect(url_for('admin_dashboard'))
         else:
             flash('Invalid username or password', 'error')
@@ -154,24 +165,24 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('index'))
 
+
 @app.route('/customer/dashboard')
 @login_required
 def customer_dashboard():
-    if current_user.role != 'customer':
+    if current_user.role != UserRole.customer:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
-    
+
     jobs = Job.query.filter_by(customer_id=current_user.id).order_by(Job.created_at.desc()).all()
     return render_template('customer_dashboard.html', jobs=jobs)
 
 @app.route('/service-provider/dashboard')
 @login_required
 def service_provider_dashboard():
-    if current_user.role != 'service_provider':
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
-    
-    # Get job matches for this service provider
+
     matches = JobMatch.query.filter_by(service_provider_id=current_user.id).order_by(JobMatch.match_score.desc()).limit(10).all()
     applications = JobApplication.query.filter_by(applicant_id=current_user.id).order_by(JobApplication.created_at.desc()).all()
     
@@ -180,19 +191,31 @@ def service_provider_dashboard():
 @app.route('/admin/dashboard')
 @login_required
 def admin_dashboard():
-    if current_user.role != 'admin':
+    if current_user.role != UserRole.admin:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
-    
-    # Get pending applications
-    pending_users = User.query.filter_by(role='service_provider', is_approved=False).all()
-    
+
+    pending_users = User.query.filter(User.role.in_([UserRole.fundi, UserRole.proffesional]), User.is_approved == False).all()
     return render_template('admin_dashboard.html', pending_users=pending_users)
 
-@app.route('/admin/approve/<int:user_id>')
+from flask import abort
+from functools import wraps
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != UserRole.admin:
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route('/admin/approve/<int:user_id>', methods=['GET', 'POST'])
 @login_required
+@admin_required
 def approve_user(user_id):
-    if current_user.role != 'admin':
+    print(f"Approve route triggered for user {user_id}")
+    if current_user.role != UserRole.admin:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
@@ -213,10 +236,11 @@ def approve_user(user_id):
     flash(f'User {user.username} has been approved', 'success')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/reject/<int:user_id>')
+@app.route('/admin/reject/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def reject_user(user_id):
-    if current_user.role != 'admin':
+    if current_user.role != UserRole.admin:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
@@ -235,10 +259,11 @@ def reject_user(user_id):
     flash(f'User {user.username} has been rejected', 'info')
     return redirect(url_for('admin_dashboard'))
 
-@app.route('/admin/ai-verify/<int:user_id>')
+@app.route('/admin/ai-verify/<int:user_id>', methods=['GET', 'POST'])
+@admin_required
 @login_required
 def ai_verify_user(user_id):
-    if current_user.role != 'admin':
+    if current_user.role != UserRole.admin:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
@@ -286,42 +311,50 @@ def ai_verify_user(user_id):
 @app.route('/job/post', methods=['GET', 'POST'])
 @login_required
 def post_job():
-    if current_user.role != 'customer':
-        flash('Only customers can post jobs', 'error')
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        job = Job(
-            customer_id=current_user.id,
-            title=request.form['title'],
-            description=request.form['description'],
-            required_skills=request.form['required_skills'],
-            location=request.form['location'],
-            budget_min=float(request.form['budget_min']) if request.form['budget_min'] else None,
-            budget_max=float(request.form['budget_max']) if request.form['budget_max'] else None,
-            profession_type=request.form['profession_type']
-        )
-        
-        if request.form['deadline']:
-            job.deadline = datetime.strptime(request.form['deadline'], '%Y-%m-%d').date()
-        
-        db.session.add(job)
-        db.session.commit()
-        
-        # Run smart matching
-        try:
-            matches = matching_engine.find_matches(job)
-            for match in matches:
-                db.session.add(match)
+    try:
+        if current_user.role != UserRole.customer:
+            flash('Only customers can post jobs', 'error')
+            return redirect(url_for('index'))
+
+        if request.method == 'POST':
+            job = Job(
+                customer_id=current_user.id,
+                title=request.form['title'],
+                description=request.form['description'],
+                required_skills=request.form['required_skills'],
+                location=request.form['location'],
+                budget_min=float(request.form['budget_min']) if request.form['budget_min'] else None,
+                budget_max=float(request.form['budget_max']) if request.form['budget_max'] else None,
+                profession_type=request.form['profession_type']
+            )
+
+            if request.form['deadline']:
+                job.deadline = datetime.strptime(request.form['deadline'], '%Y-%m-%d').date()
+
+            db.session.add(job)
             db.session.commit()
-            
-            flash(f'Job posted successfully! Found {len(matches)} potential matches.', 'success')
-        except Exception as e:
-            flash('Job posted, but matching system encountered an error.', 'warning')
-        
-        return redirect(url_for('customer_dashboard'))
-    
-    return render_template('job_post.html')
+
+            # Run smart matching
+            try:
+                matches = matching_engine.find_matches(job)
+                for match in matches:
+                    db.session.add(match)
+                db.session.commit()
+
+                flash(f'Job posted successfully! Found {len(matches)} potential matches.', 'success')
+            except Exception as e:
+                app.logger.error(f"Matching engine error: {e}")
+                flash('Job posted, but matching system encountered an error.', 'warning')
+
+            return redirect(url_for('customer_dashboard'))
+
+        return render_template('job_post.html')
+
+    except Exception as e:
+        app.logger.error(f"Error in post_job: {e}")
+        return jsonify({"error": str(e)}), 500
+
+           
 
 @app.route('/job/<int:job_id>')
 @login_required
@@ -329,16 +362,16 @@ def job_detail(job_id):
     job = Job.query.get_or_404(job_id)
     
     # Check permissions
-    if current_user.role == 'customer' and job.customer_id != current_user.id:
+    if current_user.role == UserRole.customer and job.customer_id != current_user.id:
         flash('Access denied', 'error')
         return redirect(url_for('customer_dashboard'))
     
     applications = []
     user_application = None
     
-    if current_user.role == 'customer':
+    if current_user.role == UserRole.customer:
         applications = JobApplication.query.filter_by(job_id=job.id).all()
-    elif current_user.role == 'service_provider':
+    elif current_user.role == [UserRole.fundi, UserRole.proffesional]:
         user_application = JobApplication.query.filter_by(job_id=job.id, applicant_id=current_user.id).first()
     
     return render_template('job_detail.html', job=job, applications=applications, user_application=user_application)
@@ -346,8 +379,8 @@ def job_detail(job_id):
 @app.route('/job/<int:job_id>/apply', methods=['POST'])
 @login_required
 def apply_job(job_id):
-    if current_user.role != 'service_provider':
-        flash('Only service providers can apply for jobs', 'error')
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
         return redirect(url_for('index'))
     
     job = Job.query.get_or_404(job_id)
@@ -375,7 +408,9 @@ def apply_job(job_id):
 @app.route('/job/<int:job_id>/autofill')
 @login_required
 def autofill_application(job_id):
-    if current_user.role != 'service_provider':
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
+        # return redirect(url_for('index'))
         return jsonify({'error': 'Access denied'}), 403
     
     job = Job.query.get_or_404(job_id)
@@ -391,7 +426,9 @@ def autofill_application(job_id):
 @login_required
 def profile():
     if request.method == 'POST':
-        if current_user.role == 'service_provider':
+        if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        # flash('Access denied', 'error')
+        # return redirect(url_for('index'))
             profile = current_user.service_provider_profile
             if not profile:
                 profile = ServiceProviderProfile(user_id=current_user.id)
@@ -424,7 +461,7 @@ def profile():
 @app.route('/sales-dashboard')
 @login_required
 def sales_dashboard():
-    if current_user.role != 'service_provider':
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
         flash('Access denied', 'error')
         return redirect(url_for('index'))
     
@@ -484,7 +521,9 @@ def sales_dashboard():
 @app.route('/upload-document', methods=['POST'])
 @login_required
 def upload_document():
-    if current_user.role != 'service_provider':
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        # flash('Access denied', 'error')
+        # return redirect(url_for('index'))
         return jsonify({'error': 'Access denied'}), 403
     
     if 'file' not in request.files:
@@ -532,7 +571,179 @@ def upload_document():
         except Exception as e:
             return jsonify({'error': f'Document processing failed: {str(e)}'}), 500
 
-@app.errorhandler(404)
+@app.route('/network', methods=['GET', 'POST'])
+@login_required
+def provider_network():
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+
+    search = request.args.get('search', '')
+    profession = request.args.get('profession', '')
+    location = request.args.get('location', '')
+
+    query = User.query.filter(
+        User.role.in_([UserRole.fundi.value, UserRole.proffesional.value]),
+        User.is_approved == True,
+        User.id != current_user.id
+    ).join(ServiceProviderProfile)
+
+    if search:
+        query = query.filter(
+            or_(
+                ServiceProviderProfile.specialization.ilike(f'%{search}%'),
+                ServiceProviderProfile.skills.ilike(f'%{search}%'),
+                User.username.ilike(f'%{search}%')
+            )
+        )
+
+    if profession:
+        query = query.filter(ServiceProviderProfile.profession == profession)
+
+    if location:
+        query = query.filter(ServiceProviderProfile.location.ilike(f'%{location}%'))
+
+    service_providers = query.limit(24).all()
+
+    # Compute thread IDs
+    service_providers_with_threads = []
+    for provider in service_providers:
+        thread_id = f"{min(current_user.id, provider.id)}_{max(current_user.id, provider.id)}"
+        service_providers_with_threads.append({
+            'provider': provider,
+            'thread_id': thread_id
+        })
+
+    total_fundis = User.query.join(ServiceProviderProfile).filter(
+        User.role.in_([UserRole.fundi.value, UserRole.proffesional.value]),
+        User.is_approved == True,
+        ServiceProviderProfile.profession == UserRole.fundi.value
+    ).count()
+
+    total_professionals = User.query.join(ServiceProviderProfile).filter(
+        User.role.in_([UserRole.fundi.value, UserRole.proffesional.value]),
+        User.is_approved == True,
+        ServiceProviderProfile.profession == UserRole.proffesional.value
+    ).count()
+
+    connections = []
+    pending_requests = []
+
+    return render_template(
+        'provider_network.html',
+        service_providers=service_providers_with_threads,
+        connections=connections,
+        pending_requests=pending_requests,
+        total_fundis=total_fundis,
+        total_professionals=total_professionals
+    )
+
+
+@app.route('/messages', methods=['GET', 'POST'])
+@login_required
+def messages():
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    selected_thread = request.args.get('thread')
+    
+    # Get all conversations for current user
+    conversations = db.session.query(Message).filter(
+        db.or_(
+            Message.sender_id == current_user.id,
+            Message.recipient_id == current_user.id
+        )
+    ).order_by(Message.created_at.desc()).all()
+    
+    # Group by thread_id and get latest message from each thread
+    thread_latest = {}
+    for msg in conversations:
+        if msg.thread_id not in thread_latest:
+            thread_latest[msg.thread_id] = msg
+    
+    conversations = list(thread_latest.values())
+    
+    # Get messages for selected thread
+    thread_messages = []
+    thread_recipient_id = None
+    if selected_thread:
+        thread_messages = Message.query.filter_by(thread_id=selected_thread).order_by(Message.created_at.asc()).all()
+        if thread_messages:
+            # Mark messages as read
+            for msg in thread_messages:
+                if msg.recipient_id == current_user.id:
+                    msg.is_read = True
+            db.session.commit()
+            
+            # Get recipient ID for replies
+            for msg in thread_messages:
+                if msg.sender_id != current_user.id:
+                    thread_recipient_id = msg.sender_id
+                    break
+                elif msg.recipient_id != current_user.id:
+                    thread_recipient_id = msg.recipient_id
+                    break
+    
+    return render_template('messages.html',
+                         conversations=conversations,
+                         selected_thread=selected_thread,
+                         thread_messages=thread_messages,
+                         thread_recipient_id=thread_recipient_id)
+
+@app.route('/send-reply/<int:recipient_id>')
+@login_required
+def send_message(recipient_id):
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    recipient = User.query.get_or_404(recipient_id)
+    if recipient.role not in [UserRole.fundi.value, UserRole.proffesional.value]:
+        flash('You can only message other service providers', 'error')
+        return redirect(url_for('provider_network'))
+    
+    # Create thread ID
+    thread_id = f"{min(current_user.id, recipient_id)}_{max(current_user.id, recipient_id)}"
+    
+    return redirect(url_for('messages', thread=thread_id))
+
+@app.route('/send-reply', methods=['POST'])
+@login_required
+def send_reply():
+    if current_user.role not in [UserRole.fundi, UserRole.proffesional]:
+        flash('Access denied', 'error')
+        return redirect(url_for('index'))
+    
+    thread_id = request.form.get('thread_id')
+    recipient_id = int(request.form.get('recipient_id'))
+    content = request.form.get('content')
+    
+    # Validate recipient exists and is a service provider
+    recipient = User.query.get_or_404(recipient_id)
+    if recipient.role not in [UserRole.fundi.value, UserRole.proffesional.value]:
+        flash('You can only message other service providers', 'error')
+        return redirect(url_for('provider_network'))
+    
+    if not content or not content.strip():
+        flash('Message cannot be empty', 'error')
+        return redirect(url_for('messages', thread=thread_id))
+    
+    # Create message
+    message = Message(
+        sender_id=current_user.id,
+        recipient_id=recipient_id,
+        content=content,
+        thread_id=thread_id,
+        subject='Re: Conversation'
+    )
+    
+    db.session.add(message)
+    db.session.commit()
+    
+    flash('Message sent successfully!', 'success')
+    return redirect(url_for('messages', thread=thread_id))@app.errorhandler(404)
+
 def not_found_error(error):
     return render_template('404.html'), 404
 

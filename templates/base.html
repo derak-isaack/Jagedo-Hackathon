@@ -54,6 +54,16 @@
                                     <i class="fas fa-chart-line me-1"></i>Sales Overview
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('provider_network') }}">
+                                    <i class="fas fa-users me-1"></i>Network
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('messages') }}">
+                                    <i class="fas fa-envelope me-1"></i>Messages
+                                </a>
+                            </li>
                         {% elif current_user.role == 'admin' %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('admin_dashboard') }}">

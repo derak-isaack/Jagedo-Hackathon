@@ -37,7 +37,7 @@
                                 <label class="form-label">I am a:</label>
                                 <div class="row g-3">
                                     <div class="col-md-4">
-                                        <div class="card role-card" onclick="selectRole('customer')">
+                                        <div class="card role-card" onclick="selectRole('customer', event)">
                                             <div class="card-body text-center">
                                                 <i class="fas fa-briefcase fa-2x text-primary mb-2"></i>
                                                 <h6>Customer</h6>
@@ -48,23 +48,23 @@
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <div class="card role-card" onclick="selectRole('service_provider')">
+                                        <div class="card role-card" onclick="selectRole('fundi', event)">
                                             <div class="card-body text-center">
                                                 <i class="fas fa-hard-hat fa-2x text-success mb-2"></i>
-                                                <h6>Service Provider</h6>
-                                                <p class="small text-muted">Offering construction services</p>
-                                                <input type="radio" name="role" value="service_provider" class="form-check-input" style="display: none;">
+                                                <h6>Fundi</h6>
+                                                <p class="small text-muted">Skilled craftsperson (mason, plumber, etc.)</p>
+                                                <input type="radio" name="role" value="fundi" class="form-check-input" style="display: none;">
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div class="col-md-4">
-                                        <div class="card role-card" onclick="selectRole('admin')">
+                                        <div class="card role-card" onclick="selectRole('professional', event)">
                                             <div class="card-body text-center">
-                                                <i class="fas fa-cogs fa-2x text-warning mb-2"></i>
-                                                <h6>Administrator</h6>
-                                                <p class="small text-muted">Platform management</p>
-                                                <input type="radio" name="role" value="admin" class="form-check-input" style="display: none;">
+                                                <i class="fas fa-user-tie fa-2x text-info mb-2"></i>
+                                                <h6>Professional</h6>
+                                                <p class="small text-muted">Engineer, architect, or project manager</p>
+                                                <input type="radio" name="role" value="professional" class="form-check-input" style="display: none;">
                                             </div>
                                         </div>
                                     </div>
@@ -75,16 +75,6 @@
                             <div id="provider-fields" class="col-12" style="display: none;">
                                 <hr>
                                 <h6 class="text-muted">Service Provider Details</h6>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label for="profession" class="form-label">Profession Type</label>
-                                        <select class="form-select" name="profession" id="profession">
-                                            <option value="fundi">Fundi (Skilled Craftsperson)</option>
-                                            <option value="professional">Professional (Engineer, Architect, etc.)</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
                                 <div class="alert alert-info mt-3">
                                     <i class="fas fa-info-circle me-2"></i>
                                     <strong>Note:</strong> Service provider accounts require admin approval before you can start using the platform.
@@ -190,22 +180,22 @@
 </style>
 
 <script>
-function selectRole(role) {
-    // Remove selection from all cards
+function selectRole(role, event) {
+    // Deselect all role cards
     document.querySelectorAll('.role-card').forEach(card => {
         card.classList.remove('selected');
     });
-    
-    // Add selection to clicked card
+
+    // Select clicked role card
     event.currentTarget.classList.add('selected');
-    
-    // Set radio button value
-    document.querySelector(`input[value="${role}"]`).checked = true;
-    
-    // Show/hide service provider fields
+
+    // Set radio button
+    document.querySelector(`input[name="role"][value="${role}"]`).checked = true;
+
+    // Toggle service provider fields
     const providerFields = document.getElementById('provider-fields');
     const providerDocs = document.getElementById('serviceProviderDocs');
-    if (role === 'service_provider') {
+    if (role === 'fundi' || role === 'professional') {
         providerFields.style.display = 'block';
         providerDocs.style.display = 'block';
     } else {

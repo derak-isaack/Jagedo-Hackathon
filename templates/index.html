@@ -1,55 +1,56 @@
 {% extends "base.html" %}
 
 {% block title %}Welcome - Construction Platform{% endblock %}
-
 {% block content %}
-<div class="hero-section bg-primary text-white py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-4 fw-bold mb-4">
-                    Connect. Build. Succeed.
-                </h1>
-                <p class="lead mb-4">
-                    The premier platform connecting construction professionals with customers. 
-                    Find skilled fundis and professionals for your construction projects, 
-                    or discover new opportunities as a service provider.
-                </p>
-                <div class="d-flex gap-3">
-                    <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
-                        <i class="fas fa-user-plus me-2"></i>Get Started
-                    </a>
-                    <a href="#features" class="btn btn-outline-light btn-lg">
-                        Learn More
-                    </a>
+<div class="container">
+    <div class="hero-section bg-gradient-primary text-white py-6 rounded-4 shadow-lg my-4" style="background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-3 fw-bold mb-4 animate__animated animate__fadeInLeft">
+                        Connect. Build. Succeed.
+                    </h1>
+                    <p class="lead mb-4 fs-4 animate__animated animate__fadeInUp">
+                        The premier platform connecting construction professionals with customers. 
+                        Find skilled fundis and professionals for your construction projects, 
+                        or discover new opportunities as a service provider.
+                    </p>
+                    <div class="d-flex gap-3 animate__animated animate__fadeInUp">
+                        <a href="{{ url_for('register') }}" class="btn btn-light btn-lg shadow-sm hover-lift">
+                            <i class="fas fa-user-plus me-2"></i>Get Started
+                        </a>
+                        <a href="#features" class="btn btn-outline-light btn-lg hover-lift">
+                            Learn More
+                        </a>
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-6 text-center">
-                <div class="hero-icon">
-                    <i class="fas fa-hard-hat" style="font-size: 12rem; opacity: 0.8;"></i>
+                <div class="col-lg-6 text-center animate__animated animate__fadeInRight">
+                    <div class="hero-icon position-relative">
+                        <i class="fas fa-hard-hat" style="font-size: 14rem; opacity: 0.9; filter: drop-shadow(0 0 20px rgba(255,255,255,0.2));"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container my-5">
+<div class="container my-6">
     <!-- Features Section -->
-    <section id="features" class="py-5">
-        <div class="text-center mb-5">
-            <h2 class="display-5 fw-bold">Why Choose ConstructPro?</h2>
-            <p class="lead text-muted">Advanced technology meets construction expertise</p>
+    <section id="features" class="py-6">
+        <div class="text-center mb-5 animate__animated animate__fadeInUp">
+            <h2 class="display-4 fw-bold">Why Choose ConstructPro?</h2>
+            <p class="lead text-muted fs-5">Advanced technology meets construction expertise</p>
         </div>
         
         <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="text-primary mb-3">
-                            <i class="fas fa-robot fa-3x"></i>
+            <div class="col-md-4 animate__animated animate__fadeInUp">
+                <div class="card h-100 border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body text-center p-5">
+                        <div class="text-primary mb-4">
+                            <i class="fas fa-robot fa-4x"></i>
                         </div>
-                        <h5 class="card-title">AI-Powered Matching</h5>
-                        <p class="card-text">
+                        <h4 class="card-title fw-bold">AI-Powered Matching</h4>
+                        <p class="card-text fs-5">
                             Our smart algorithm matches customers with the most suitable service providers 
                             based on skills, experience, and project requirements.
                         </p>
@@ -57,14 +58,14 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="text-success mb-3">
-                            <i class="fas fa-shield-check fa-3x"></i>
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="card h-100 border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body text-center p-5">
+                        <div class="text-success mb-4">
+                            <i class="fas fa-shield-check fa-4x"></i>
                         </div>
-                        <h5 class="card-title">Verified Professionals</h5>
-                        <p class="card-text">
+                        <h4 class="card-title fw-bold">Verified Professionals</h4>
+                        <p class="card-text fs-5">
                             All service providers undergo thorough verification including AI-powered 
                             document analysis and admin approval for your peace of mind.
                         </p>
@@ -72,14 +73,14 @@
                 </div>
             </div>
             
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm">
-                    <div class="card-body text-center p-4">
-                        <div class="text-info mb-3">
-                            <i class="fas fa-magic fa-3x"></i>
+            <div class="col-md-4 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                <div class="card h-100 border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body text-center p-5">
+                        <div class="text-info mb-4">
+                            <i class="fas fa-magic fa-4x"></i>
                         </div>
-                        <h5 class="card-title">Smart Autofill</h5>
-                        <p class="card-text">
+                        <h4 class="card-title fw-bold">Smart Autofill</h4>
+                        <p class="card-text fs-5">
                             Service providers can automatically populate application forms using 
                             their uploaded documents and profiles, saving time and effort.
                         </p>
@@ -90,67 +91,67 @@
     </section>
 
     <!-- How It Works -->
-    <section class="py-5 bg-light rounded">
+    <section class="py-6 bg-light rounded-4 shadow-sm">
         <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="display-5 fw-bold">How It Works</h2>
+            <div class="text-center mb-5 animate__animated animate__fadeInUp">
+                <h2 class="display-4 fw-bold">How It Works</h2>
             </div>
             
             <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="card border-primary">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
+                <div class="col-md-6 animate__animated animate__fadeInLeft">
+                    <div class="card border-0 shadow-sm hover-lift transition-300">
+                        <div class="card-header bg-gradient-primary text-white py-3">
+                            <h5 class="mb-0 fw-bold">
                                 <i class="fas fa-user-tie me-2"></i>For Customers
                             </h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <ol class="list-unstyled">
-                                <li class="mb-3">
-                                    <span class="badge bg-primary rounded-pill me-2">1</span>
-                                    Create an account and complete your profile
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-3 p-3">1</span>
+                                    <span class="fs-5">Create an account and complete your profile</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-primary rounded-pill me-2">2</span>
-                                    Post your construction project with details and budget
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-3 p-3">2</span>
+                                    <span class="fs-5">Post your construction project with details and budget</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-primary rounded-pill me-2">3</span>
-                                    Review AI-matched service providers
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-3 p-3">3</span>
+                                    <span class="fs-5">Review AI-matched service providers</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-primary rounded-pill me-2">4</span>
-                                    Select the best candidate for your project
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-primary rounded-circle me-3 p-3">4</span>
+                                    <span class="fs-5">Select the best candidate for your project</span>
                                 </li>
                             </ol>
                         </div>
                     </div>
                 </div>
                 
-                <div class="col-md-6">
-                    <div class="card border-success">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">
+                <div class="col-md-6 animate__animated animate__fadeInRight">
+                    <div class="card border-0 shadow-sm hover-lift transition-300">
+                        <div class="card-header bg-gradient-success text-white py-3">
+                            <h5 class="mb-0 fw-bold">
                                 <i class="fas fa-hard-hat me-2"></i>For Service Providers
                             </h5>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <ol class="list-unstyled">
-                                <li class="mb-3">
-                                    <span class="badge bg-success rounded-pill me-2">1</span>
-                                    Register and upload your credentials
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-success rounded-circle me-3 p-3">1</span>
+                                    <span class="fs-5">Register and upload your credentials</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-success rounded-pill me-2">2</span>
-                                    Get verified through AI and admin approval
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-success rounded-circle me-3 p-3">2</span>
+                                    <span class="fs-5">Get verified through AI and admin approval</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-success rounded-pill me-2">3</span>
-                                    Receive personalized job matches
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-success rounded-circle me-3 p-3">3</span>
+                                    <span class="fs-5">Receive personalized job matches</span>
                                 </li>
-                                <li class="mb-3">
-                                    <span class="badge bg-success rounded-pill me-2">4</span>
-                                    Apply with AI-assisted applications
+                                <li class="mb-4 d-flex align-items-center">
+                                    <span class="badge bg-success rounded-circle me-3 p-3">4</span>
+                                    <span class="fs-5">Apply with AI-assisted applications</span>
                                 </li>
                             </ol>
                         </div>
@@ -161,37 +162,37 @@
     </section>
 
     <!-- Stats Section -->
-    <section class="py-5">
+    <section class="py-6">
         <div class="row text-center g-4">
-            <div class="col-md-3">
-                <div class="card border-0">
-                    <div class="card-body">
-                        <h3 class="text-primary fw-bold">1000+</h3>
-                        <p class="text-muted">Verified Professionals</p>
+            <div class="col-md-3 animate__animated animate__fadeInUp">
+                <div class="card border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body p-4">
+                        <h2 class="text-primary fw-bold display-4 mb-2">1000+</h2>
+                        <p class="text-muted fs-5 mb-0">Verified Professionals</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0">
-                    <div class="card-body">
-                        <h3 class="text-success fw-bold">500+</h3>
-                        <p class="text-muted">Completed Projects</p>
+            <div class="col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                <div class="card border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body p-4">
+                        <h2 class="text-success fw-bold display-4 mb-2">500+</h2>
+                        <p class="text-muted fs-5 mb-0">Completed Projects</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0">
-                    <div class="card-body">
-                        <h3 class="text-info fw-bold">95%</h3>
-                        <p class="text-muted">Match Accuracy</p>
+            <div class="col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                <div class="card border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body p-4">
+                        <h2 class="text-info fw-bold display-4 mb-2">95%</h2>
+                        <p class="text-muted fs-5 mb-0">Match Accuracy</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card border-0">
-                    <div class="card-body">
-                        <h3 class="text-warning fw-bold">24/7</h3>
-                        <p class="text-muted">AI Support</p>
+            <div class="col-md-3 animate__animated animate__fadeInUp" style="animation-delay: 0.6s;">
+                <div class="card border-0 shadow-sm hover-lift transition-300">
+                    <div class="card-body p-4">
+                        <h2 class="text-warning fw-bold display-4 mb-2">24/7</h2>
+                        <p class="text-muted fs-5 mb-0">AI Support</p>
                     </div>
                 </div>
             </div>
@@ -199,18 +200,36 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-5 text-center">
-        <div class="card bg-primary text-white">
-            <div class="card-body py-5">
-                <h2 class="card-title mb-4">Ready to Get Started?</h2>
-                <p class="card-text lead mb-4">
+    <section class="py-6 text-center">
+        <div class="card bg-gradient-primary text-white border-0 shadow-lg">
+            <div class="card-body py-6">
+                <h2 class="display-4 fw-bold mb-4 animate__animated animate__fadeInUp">Ready to Get Started?</h2>
+                <p class="lead fs-4 mb-4 animate__animated animate__fadeInUp">
                     Join thousands of construction professionals already using ConstructPro
                 </p>
-                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg">
+                <a href="{{ url_for('register') }}" class="btn btn-light btn-lg shadow hover-lift animate__animated animate__fadeInUp">
                     <i class="fas fa-rocket me-2"></i>Join Now
                 </a>
             </div>
         </div>
     </section>
 </div>
+
+<style>
+.hover-lift {
+    transition: transform 0.3s ease;
+}
+.hover-lift:hover {
+    transform: translateY(-5px);
+}
+.transition-300 {
+    transition: all 0.3s ease;
+}
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+.bg-gradient-success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+</style>
 {% endblock %}

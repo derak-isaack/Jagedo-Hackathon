@@ -12,7 +12,7 @@
                         <i class="fas fa-plus me-2"></i>Post a New Construction Job
                     </h3>
                 </div>
-                
+
                 <div class="card-body p-4">
                     <form method="POST">
                         <div class="row g-3">
@@ -23,7 +23,7 @@
                                        placeholder="e.g., Kitchen Renovation, House Construction, Plumbing Repair" required>
                                 <div class="form-text">Be specific about what work needs to be done</div>
                             </div>
-                            
+
                             <!-- Job Description -->
                             <div class="col-12">
                                 <label for="description" class="form-label">Job Description</label>
@@ -31,7 +31,7 @@
                                           placeholder="Describe the project in detail, including materials, timeline, and any specific requirements..." required></textarea>
                                 <div class="form-text">Include as much detail as possible to get accurate matches</div>
                             </div>
-                            
+
                             <!-- Required Skills -->
                             <div class="col-12">
                                 <label for="required_skills" class="form-label">Required Skills</label>
@@ -39,14 +39,14 @@
                                           placeholder="e.g., plumbing, electrical work, carpentry, concrete work, painting..."></textarea>
                                 <div class="form-text">List the specific skills needed for this job</div>
                             </div>
-                            
+
                             <!-- Location and Profession Type -->
                             <div class="col-md-6">
                                 <label for="location" class="form-label">Location</label>
                                 <input type="text" class="form-control" id="location" name="location" 
                                        placeholder="City, State or Address">
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label for="profession_type" class="form-label">Looking for</label>
                                 <select class="form-select" id="profession_type" name="profession_type" required>
@@ -56,7 +56,7 @@
                                     <option value="both">Both Fundi and Professional</option>
                                 </select>
                             </div>
-                            
+
                             <!-- Budget Range -->
                             <div class="col-12">
                                 <label class="form-label">Budget Range</label>
@@ -81,14 +81,13 @@
                                 </div>
                                 <div class="form-text">Set a realistic budget range to attract suitable candidates</div>
                             </div>
-                            
+
                             <!-- Deadline -->
                             <div class="col-md-6">
                                 <label for="deadline" class="form-label">Project Deadline (Optional)</label>
-                                <input type="date" class="form-control" id="deadline" name="deadline" 
-                                       min="{{ (moment().add(1, 'day')).format('YYYY-MM-DD') }}">
+                                <input type="date" class="form-control" id="deadline" name="deadline">
                             </div>
-                            
+
                             <!-- Job Posting Preview -->
                             <div class="col-12">
                                 <hr>
@@ -101,7 +100,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Submit -->
                             <div class="col-12">
                                 <div class="d-flex gap-2">
@@ -131,7 +130,7 @@ function updatePreview() {
     const budgetMin = document.getElementById('budget_min').value;
     const budgetMax = document.getElementById('budget_max').value;
     const deadline = document.getElementById('deadline').value;
-    
+
     let budget = 'Budget TBD';
     if (budgetMin && budgetMax) {
         budget = `$${budgetMin} - $${budgetMax}`;
@@ -140,7 +139,7 @@ function updatePreview() {
     } else if (budgetMin) {
         budget = `Starting from $${budgetMin}`;
     }
-    
+
     const previewHtml = `
         <div class="d-flex justify-content-between align-items-start mb-2">
             <h6 class="mb-0">${title}</h6>
@@ -160,12 +159,12 @@ function updatePreview() {
             ${deadline ? `<div class="col-md-4"><i class="fas fa-calendar me-1"></i>${deadline}</div>` : ''}
         </div>
     `;
-    
+
     document.getElementById('jobPreview').innerHTML = previewHtml;
 }
 
 // Attach event listeners
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const inputs = ['title', 'description', 'location', 'profession_type', 'budget_min', 'budget_max', 'deadline'];
     inputs.forEach(id => {
         const element = document.getElementById(id);
@@ -174,32 +173,32 @@ document.addEventListener('DOMContentLoaded', function() {
             element.addEventListener('change', updatePreview);
         }
     });
-    
+
     // Set minimum date to tomorrow
     const today = new Date();
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     document.getElementById('deadline').min = tomorrow.toISOString().split('T')[0];
-    
+
     updatePreview();
 });
 
 // Budget validation
-document.getElementById('budget_min').addEventListener('input', function() {
+document.getElementById('budget_min').addEventListener('input', function () {
     const min = parseFloat(this.value);
     const maxField = document.getElementById('budget_max');
     const max = parseFloat(maxField.value);
-    
+
     if (min && max && min > max) {
         maxField.value = min;
     }
 });
 
-document.getElementById('budget_max').addEventListener('input', function() {
+document.getElementById('budget_max').addEventListener('input', function () {
     const max = parseFloat(this.value);
     const minField = document.getElementById('budget_min');
     const min = parseFloat(minField.value);
-    
+
     if (min && max && max < min) {
         minField.value = max;
     }

@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}Cross-Border Collaboration - Construction Tech{% endblock %}
+
+{% block content %}
+<div class="cross-border-dashboard">
+    <!-- Statistics Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-globe stat-icon primary"></i>
+                <div>
+                    <div class="stat-title">International Projects</div>
+                    <div class="stat-value">{{ total_projects }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-flag stat-icon success"></i>
+                <div>
+                    <div class="stat-title">Partner Countries</div>
+                    <div class="stat-value">{{ total_countries }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-calendar stat-icon warning"></i>
+                <div>
+                    <div class="stat-title">Upcoming Meetings</div>
+                    <div class="stat-value">3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tabs -->
+    <div class="card">
+        <div class="card-body">
+            <div class="tabs">
+                <div class="tab active" data-tab="internationalProjects">International Projects</div>
+                <div class="tab" data-tab="upcomingMeetings">Upcoming Meetings</div>
+                <div class="tab" data-tab="recentActivity">Recent Activity</div>
+            </div>
+            
+            <!-- International Projects Tab -->
+            <div id="internationalProjects" class="tab-content">
+                <div class="table-responsive">
+                    <table class="table datatable">
+                        <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Countries</th>
+                                <th>Timeline</th>
+                                <th>Status</th>
+                                <th>Completion</th>
+                                <th>Budget</th>
+                                <th>Next Meeting</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for project in projects %}
+                            <tr>
+                                <td>{{ project.name }}</td>
+                                <td>
+                                    {% for country in project.countries.split(',') %}
+                                        <span class="tag tag-blue">
+                                            <i class="fas fa-flag"></i> {{ country.strip() }}
+                                        </span>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <div>Start: {{ project.start_date }}</div>
+                                    <div>End: {{ project.end_date }}</div>
+                                </td>
+                                <td>
+                                    {% if project.status == 'Planning' %}
+                                        <span class="badge badge-primary">{{ project.status }}</span>
+                                    {% elif project.status == 'Completed' %}
+                                        <span class="badge badge-secondary">{{ project.status }}</span>
+                                    {% else %}
+                                        <span class="badge badge-success">{{ project.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" style="width: {{ project.completion }}%">{{ project.completion }}%</div>
+                                    </div>
+                                </td>
+                                <td>{{ project.budget }}</td>
+                                <td>{{ project.next_meeting }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-users"></i> Team
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-comments"></i> Chat
+                                        </button>
+                                        <button class="btn btn-secondary btn-sm">
+                                            <i class="fas fa-file-alt"></i> Docs
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Upcoming Meetings Tab -->
+            <div id="upcomingMeetings" class="tab-content" style="display: none;">
+                <div class="list-group">
+                    <!-- Meeting 1 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">
+                                        Technical Committee Meeting
+                                        <span class="tag tag-blue">Regional Power Grid Integration</span>
+                                    </h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar-alt"></i> May 30, 2023, 10:00 AM - 12:00 PM EAT
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-globe"></i> Video Conference
+                                    </p>
+                                    <p class="mb-3">
+                                        <i class="fas fa-users"></i> Participants:
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> John Kamau (Kenya)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Abebe Bekele (Ethiopia)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Jean-Paul Kagame (Rwanda)</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-video"></i> Join
+                                    </button>
+                                    <button class="btn btn-secondary">Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Meeting 2 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">
+                                        Environmental Impact Review
+                                        <span class="tag tag-blue">East African Highway Network</span>
+                                    </h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar-alt"></i> May 25, 2023, 2:00 PM - 4:00 PM EAT
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-globe"></i> In-Person <i class="fas fa-map-marker-alt"></i> Nairobi, Kenya
+                                    </p>
+                                    <p class="mb-3">
+                                        <i class="fas fa-users"></i> Participants:
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Mary Ochieng (Kenya)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Joseph Museveni (Uganda)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Grace Nyerere (Tanzania)</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-secondary">Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Meeting 3 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h5 class="card-title">
+                                        Project Kickoff Meeting
+                                        <span class="tag tag-blue">Cross-Border Water Management</span>
+                                    </h5>
+                                    <p class="mb-1">
+                                        <i class="fas fa-calendar-alt"></i> May 22, 2023, 9:00 AM - 11:00 AM EAT
+                                    </p>
+                                    <p class="mb-1">
+                                        <i class="fas fa-globe"></i> Hybrid <i class="fas fa-map-marker-alt"></i> Dar es Salaam, Tanzania
+                                    </p>
+                                    <p class="mb-3">
+                                        <i class="fas fa-users"></i> Participants:
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Samuel Njoroge (Kenya)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Fatima Hassan (Tanzania)</span>
+                                        <span class="tag tag-secondary"><i class="fas fa-user"></i> Pierre Nkurunziza (Burundi)</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary">
+                                        <i class="fas fa-video"></i> Join
+                                    </button>
+                                    <button class="btn btn-secondary">Details</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Activity Tab -->
+            <div id="recentActivity" class="tab-content" style="display: none;">
+                <div class="list-group">
+                    <!-- Activity 1 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">
+                                        Document Shared
+                                        <span class="tag tag-blue">East African Highway Network</span>
+                                    </h5>
+                                    <p class="mb-0">
+                                        John Kamau (Kenya Highways Authority, Kenya) - 2 hours ago
+                                    </p>
+                                    <p class="mb-0">Shared 'Environmental Impact Assessment Report'</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity 2 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">
+                                        Meeting Scheduled
+                                        <span class="tag tag-blue">Regional Power Grid Integration</span>
+                                    </h5>
+                                    <p class="mb-0">
+                                        Sarah Omondi (Kenya Power, Kenya) - 5 hours ago
+                                    </p>
+                                    <p class="mb-0">Scheduled 'Technical Committee Meeting' for May 30, 2023</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity 3 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">
+                                        Comment Added
+                                        <span class="tag tag-blue">Cross-Border Water Management</span>
+                                    </h5>
+                                    <p class="mb-0">
+                                        Michael Wanjiku (Kenya Water Resources Authority, Kenya) - 1 day ago
+                                    </p>
+                                    <p class="mb-0">Commented on 'Water Resource Allocation Plan'</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Activity 4 -->
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar me-3">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">
+                                        Video Conference
+                                        <span class="tag tag-blue">East African Highway Network</span>
+                                    </h5>
+                                    <p class="mb-0">
+                                        David Muthoni (Kenya Highways Authority, Kenya) - 2 days ago
+                                    </p>
+                                    <p class="mb-0">Hosted 'Construction Progress Review' video conference</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

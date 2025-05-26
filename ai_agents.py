@@ -2,18 +2,29 @@ import os
 import json
 import logging
 from typing import Dict, List, Any, Optional
-from openai import OpenAI
+from google.generativeai import GenerativeModel
+import google.generativeai as genai
+from dotenv import load_dotenv
 
-# the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-# do not change this unless explicitly requested by the user
-OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+load_dotenv()
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+
+try:
+    genai.configure(api_key=GOOGLE_API_KEY)
+    llm = GenerativeModel('gemini-2.0-flash')
+except Exception as e:
+    logger.error(f"Failed to initialize Google AI model: {str(e)}")
+    llm = None
 
 class AIVerificationAgent:
-    """AI agent for verifying service provider applications using LangChain and OpenAI"""
+    """AI agent for verifying service provider applications using Google's Generative AI"""
     
     def __init__(self):
-        self.model = "gpt-4o"
+        self.model = "gemini-2.0-flash"
         
     def verify_application(self, user, profile) -> Dict[str, Any]:
         """
@@ -27,36 +38,26 @@ class AIVerificationAgent:
             Dict containing verification results
         """
         try:
+            if not llm:
+                raise Exception("LLM not properly initialized")
+
             # Gather application data
             application_data = self._gather_application_data(user, profile)
             
             # Analyze with AI
             verification_prompt = self._build_verification_prompt(application_data)
             
-            response = openai_client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are a CONSTRUCTION EXPERT and verification specialist with 20+ years of experience in the construction industry. "
-                        "Your expertise includes: project management, skilled trades assessment, safety compliance, quality standards, "
-                        "and contractor evaluation. You understand the difference between 'fundi' (skilled craftsmen) and professional contractors. "
-                        "Your job is to assess the authenticity and qualifications of service provider applications to reduce admin backlog. "
-                        "Evaluate their skills, experience, certifications, and documentation with the eye of a seasoned construction professional. "
-                        "Flag any red flags or inconsistencies that could indicate fraudulent applications."
-                    },
-                    {
-                        "role": "user",
-                        "content": verification_prompt
-                    }
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.3
-            )
+            response = llm.generate_content(verification_prompt)
+            try:
+                result = json.loads(response.text)
+            except json.JSONDecodeError:
+                cleaned_text = response.text.strip()
+                if cleaned_text.startswith(""):
+                    cleaned_text = cleaned_text[7:]
+                if cleaned_text.endswith(""):
+                    cleaned_text = cleaned_text[:-3]
+                result = json.loads(cleaned_text.strip())
             
-            result = json.loads(response.choices[0].message.content)
-            
-            # Ensure required fields are present
             if 'approved' not in result:
                 result['approved'] = False
             if 'score' not in result:
@@ -67,7 +68,7 @@ class AIVerificationAgent:
             return result
             
         except Exception as e:
-            logging.error(f"AI verification failed: {str(e)}")
+            logger.error(f"AI verification failed: {str(e)}", exc_info=True)
             return {
                 'approved': False,
                 'score': 0.0,
@@ -112,22 +113,14 @@ class AIVerificationAgent:
     def _build_verification_prompt(self, data: Dict[str, Any]) -> str:
         """Build the verification prompt for AI analysis"""
         
-        return f"""
-        Please verify this service provider application and provide a comprehensive analysis.
+        return f"""You are a CONSTRUCTION EXPERT and verification specialist. Verify this service provider application and provide analysis.
 
         APPLICATION DATA:
         {json.dumps(data, indent=2)}
 
-        Please analyze the following aspects and provide your response in JSON format:
-
-        1. Profile completeness and quality
-        2. Experience validation (check if experience years match skills and specialization)
-        3. Skills assessment (relevant to construction/fundi work)
-        4. Document verification (if any documents provided)
-        5. Overall credibility assessment
-        6. Red flags or concerns
-
-        Response format:
+        Analyze profile completeness, experience validation, skills assessment, document verification, credibility and red flags.
+        
+        Respond only in this JSON format:
         {{
             "approved": boolean,
             "score": float (0.0 to 1.0),
@@ -158,20 +151,13 @@ class AIVerificationAgent:
                 "recommendations": "string",
                 "approval_reason": "string"
             }}
-        }}
-
-        Approval criteria:
-        - Overall score must be >= 0.7
-        - No major red flags
-        - Profile shows genuine construction/technical expertise
-        - Skills match the specialization
-        """
+        }}"""
 
 class AutofillAgent:
     """AI agent for auto-filling job application forms"""
     
     def __init__(self):
-        self.model = "gpt-4o"
+        self.model = "gemini-2.0-flash"
     
     def generate_application_data(self, job, profile) -> Dict[str, Any]:
         """
@@ -185,6 +171,9 @@ class AutofillAgent:
             Dict containing suggested application data
         """
         try:
+            if not llm:
+                raise Exception("LLM not properly initialized")
+
             # Get documents text for context
             documents_text = ""
             if profile.documents:
@@ -194,29 +183,21 @@ class AutofillAgent:
             
             prompt = self._build_autofill_prompt(job, profile, documents_text)
             
-            response = openai_client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert job application assistant for construction workers and professionals. "
-                        "Generate personalized, professional application content based on the applicant's profile "
-                        "and the job requirements. Always be honest about skills and experience."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.7
-            )
-            
-            result = json.loads(response.choices[0].message.content)
+            response = llm.generate_content(prompt)
+            try:
+                result = json.loads(response.text)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, try to clean/format the response
+                cleaned_text = response.text.strip()
+                if cleaned_text.startswith(""):
+                    cleaned_text = cleaned_text[7:]
+                if cleaned_text.endswith(""):
+                    cleaned_text = cleaned_text[:-3]
+                result = json.loads(cleaned_text.strip())
             return result
             
         except Exception as e:
-            logging.error(f"Autofill generation failed: {str(e)}")
+            logger.error(f"Autofill generation failed: {str(e)}", exc_info=True)
             return {
                 'error': f"Autofill failed: {str(e)}",
                 'cover_letter': "I am interested in this position and believe my skills align with your requirements.",
@@ -247,8 +228,7 @@ class AutofillAgent:
             'bio': profile.bio
         }
         
-        return f"""
-        Generate a professional job application based on the following information:
+        return f"""Generate a professional job application based on this information:
 
         JOB DETAILS:
         {json.dumps(job_data, indent=2)}
@@ -259,30 +239,21 @@ class AutofillAgent:
         DOCUMENTS CONTEXT:
         {documents_text}
 
-        Please generate application content in JSON format:
+        Respond only in this JSON format:
         {{
-            "cover_letter": "A personalized, professional cover letter (2-3 paragraphs) highlighting relevant experience and skills",
-            "proposed_rate": float or null (based on job budget and applicant's hourly rate),
-            "estimated_duration": "Realistic time estimate based on job description",
+            "cover_letter": "A personalized, professional cover letter (2-3 paragraphs)",
+            "proposed_rate": float or null,
+            "estimated_duration": "string",
             "key_strengths": ["strength1", "strength2", "strength3"],
-            "relevant_experience": "Brief summary of most relevant experience",
-            "availability": "When the applicant can start"
-        }}
-
-        Guidelines:
-        - Be honest about experience and skills
-        - Match the tone to the job (professional for professional roles, practical for fundi roles)
-        - Propose fair rates within the job budget range if specified
-        - Provide realistic time estimates
-        - Highlight the most relevant skills and experience
-        - Keep cover letter concise but engaging
-        """
+            "relevant_experience": "string",
+            "availability": "string"
+        }}"""
 
 class SmartMatchingAgent:
     """AI agent for intelligent job matching"""
     
     def __init__(self):
-        self.model = "gpt-4o"
+        self.model = "gemini-2.0-flash"
     
     def calculate_match_score(self, job, service_provider_profile) -> Dict[str, Any]:
         """
@@ -296,26 +267,22 @@ class SmartMatchingAgent:
             Dict containing match score and analysis
         """
         try:
+            if not llm:
+                raise Exception("LLM not properly initialized")
+
             prompt = self._build_matching_prompt(job, service_provider_profile)
             
-            response = openai_client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "You are an expert job matching algorithm for construction and technical services. "
-                        "Analyze job requirements against service provider profiles and calculate compatibility scores."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.3
-            )
-            
-            result = json.loads(response.choices[0].message.content)
+            response = llm.generate_content(prompt)
+            try:
+                result = json.loads(response.text)
+            except json.JSONDecodeError:
+                # If JSON parsing fails, try to clean/format the response
+                cleaned_text = response.text.strip()
+                if cleaned_text.startswith(""):
+                    cleaned_text = cleaned_text[7:]
+                if cleaned_text.endswith(""):
+                    cleaned_text = cleaned_text[:-3]
+                result = json.loads(cleaned_text.strip())
             
             # Ensure score is within valid range
             if 'match_score' in result:
@@ -326,7 +293,7 @@ class SmartMatchingAgent:
             return result
             
         except Exception as e:
-            logging.error(f"Match scoring failed: {str(e)}")
+            logger.error(f"Match scoring failed: {str(e)}", exc_info=True)
             return {
                 'match_score': 0.0,
                 'reasons': [f"Matching failed: {str(e)}"],
@@ -355,19 +322,24 @@ class SmartMatchingAgent:
             'hourly_rate': float(profile.hourly_rate) if profile.hourly_rate else None
         }
         
-        return f"""
-        Analyze the compatibility between this job and service provider profile:
-
+        return f"""Analyze the compatibility between this job and service provider profile.
+        Give HIGHEST priority to matching job title with provider's specialization and skills.
+    
         JOB REQUIREMENTS:
         {json.dumps(job_data, indent=2)}
-
+    
         SERVICE PROVIDER PROFILE:
         {json.dumps(profile_data, indent=2)}
-
-        Calculate a match score and provide analysis in JSON format:
+    
+        Respond only in this JSON format:
         {{
             "match_score": float (0.0 to 1.0),
             "analysis": {{
+                "title_match": {{
+                    "score": float,
+                    "matching_terms": ["term1", "term2"],
+                    "notes": "string"
+                }},
                 "skills_match": {{
                     "score": float,
                     "matching_skills": ["skill1", "skill2"],
@@ -391,14 +363,5 @@ class SmartMatchingAgent:
                 }}
             }},
             "reasons": ["reason1", "reason2"],
-            "concerns": ["concern1", "concern2"],
-            "recommendation": "string"
-        }}
-
-        Scoring guidelines:
-        - 0.9-1.0: Perfect match
-        - 0.7-0.89: Very good match
-        - 0.5-0.69: Good match
-        - 0.3-0.49: Marginal match
-        - 0.0-0.29: Poor match
-        """
+            "concerns": ["concern1", "concern2"]
+        }}"""

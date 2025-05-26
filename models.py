@@ -2,12 +2,16 @@ from datetime import datetime
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from enum import Enum
+import enum
+from sqlalchemy import Enum
 
-class UserRole(Enum):
-    ADMIN = 'admin'
-    SERVICE_PROVIDER = 'service_provider'
-    CUSTOMER = 'customer'
+
+
+class UserRole(enum.Enum):
+    customer = "customer"
+    fundi = "fundi"
+    admin = "admin"
+    proffesional = "proffessional"
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -16,7 +20,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.Enum(UserRole), nullable=False) 
+    role = db.Column(Enum(UserRole), nullable=False, default=UserRole.customer)  # 'customer', 'service_provider', 'admin'
     is_approved = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -143,3 +147,32 @@ class Notification(db.Model):
     # Relationships
     user = db.relationship('User', backref='notifications')
     related_job = db.relationship('Job', backref='notifications')
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    subject = db.Column(db.String(200))
+    content = db.Column(db.Text, nullable=False)
+    is_read = db.Column(db.Boolean, default=False)
+    thread_id = db.Column(db.String(100))  # For grouping related messages
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='received_messages')
+
+class ServiceProviderConnection(db.Model):
+    __tablename__ = 'service_provider_connections'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    requester_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    requested_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # 'pending', 'accepted', 'declined'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    requester = db.relationship('User', foreign_keys=[requester_id])
+    requested = db.relationship('User', foreign_keys=[requested_id])

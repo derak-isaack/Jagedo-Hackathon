@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+
+{% block title %}Smart Matching - Construction Tech{% endblock %}
+
+{% block content %}
+<div class="smart-matching-dashboard">
+    <!-- Statistics Cards -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-search stat-icon primary"></i>
+                <div>
+                    <div class="stat-title">Active Requests</div>
+                    <div class="stat-value">{{ total_requests }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-tools stat-icon success"></i>
+                <div>
+                    <div class="stat-title">Available Providers</div>
+                    <div class="stat-value">{{ total_providers }}</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle stat-icon warning"></i>
+                <div>
+                    <div class="stat-title">Match Success Rate</div>
+                    <div class="stat-value">85%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Service Requests Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Smart Matching & Requisition Automation</h3>
+        </div>
+        
+        <div class="card-body">
+            <!-- Search and Filter Tools -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Search requests...">
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="d-flex flex-wrap gap-2">
+                        <select class="form-select">
+                            <option value="all">All Service Types</option>
+                            <option value="plumbing">Plumbing</option>
+                            <option value="electrical">Electrical</option>
+                            <option value="painting">Painting</option>
+                            <option value="carpentry">Carpentry</option>
+                        </select>
+                        
+                        <select class="form-select">
+                            <option value="all">All Locations</option>
+                            <option value="nairobi">Nairobi</option>
+                            <option value="mombasa">Mombasa</option>
+                            <option value="kisumu">Kisumu</option>
+                        </select>
+                        
+                        <select class="form-select">
+                            <option value="all">All Statuses</option>
+                            <option value="pending">Pending</option>
+                            <option value="matching">Matching</option>
+                            <option value="matched">Matched</option>
+                        </select>
+                        
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-filter"></i> More Filters
+                        </button>
+                        
+                        <button class="btn btn-secondary">
+                            <i class="fas fa-sort"></i> Sort
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="allRequests">All Requests</div>
+                <div class="tab" data-tab="pendingRequests">Pending</div>
+                <div class="tab" data-tab="matchingRequests">Matching</div>
+                <div class="tab" data-tab="matchedRequests">Matched</div>
+            </div>
+            
+            <!-- All Requests Tab -->
+            <div id="allRequests" class="tab-content">
+                <div class="table-responsive">
+                    <table class="table datatable">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Client</th>
+                                <th>Service Type</th>
+                                <th>Urgency</th>
+                                <th>Budget</th>
+                                <th>Posted</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in requests %}
+                            <tr>
+                                <td>
+                                    {{ request.title }}
+                                    <div style="font-size: 12px; color: #888;">
+                                        <i class="fas fa-map-marker-alt"></i> {{ request.location }}
+                                    </div>
+                                </td>
+                                <td>{{ request.client }}</td>
+                                <td><span class="tag tag-blue">{{ request.service_type }}</span></td>
+                                <td>
+                                    {% if request.urgency == 'High' %}
+                                        <span class="tag tag-red">{{ request.urgency }}</span>
+                                    {% elif request.urgency == 'Medium' %}
+                                        <span class="tag tag-orange">{{ request.urgency }}</span>
+                                    {% else %}
+                                        <span class="tag tag-green">{{ request.urgency }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.budget }}</td>
+                                <td>{{ request.date_posted }}</td>
+                                <td>
+                                    {% if request.status == 'Pending' %}
+                                        <span class="badge badge-warning">
+                                            <i class="fas fa-clock"></i> {{ request.status }}
+                                        </span>
+                                    {% elif request.status == 'Matching' %}
+                                        <span class="badge badge-primary">
+                                            <i class="fas fa-search"></i> {{ request.status }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge badge-success">
+                                            <i class="fas fa-check-circle"></i> {{ request.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm btn-match" 
+                                        data-toggle="modal" 
+                                        data-target="matchModal" 
+                                        data-request-id="{{ request.id }}" 
+                                        data-service-type="{{ request.service_type }}">
+                                        Find Matches
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Pending Requests Tab -->
+            <div id="pendingRequests" class="tab-content" style="display: none;">
+                <div class="table-responsive">
+                    <table class="table datatable">
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Client</th>
+                                <th>Service Type</th>
+                                <th>Urgency</th>
+                                <th>Budget</th>
+                                <th>Posted</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in requests if request.status == 'Pending' %}
+                            <tr>
+                                <td>
+                                    {{ request.title }}
+                                    <div style="font-size: 12px; color: #888;">
+                                        <i class="fas fa-map-marker-alt"></i> {{ request.location }}
+                                    </div>
+                                </td>
+                                <td>{{ request.client }}</td>
+                                <td><span class="tag tag-blue">{{ request.service_type }}</span></td>
+                                <td>
+                                    {% if request.urgency == 'High' %}
+                                        <span class="tag tag-red">{{ request.urgency }}</span>
+                                    {% elif request.urgency == 'Medium' %}
+                                        <span class="tag tag-orange">{{ request.urgency }}</span>
+                                    {% else %}
+                                        <span class="tag tag-green">{{ request.urgency }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ request.budget }}</td>
+                                <td>{{ request.date_posted }}</td>
+                                <td>
+                                    <button class="btn btn-primary btn-sm btn-match" 
+                                        data-toggle="modal" 
+                                        data-target="matchModal" 
+                                        data-request-id="{{ request.id }}" 
+                                        data-service-type="{{ request.service_type }}">
+                                        Find Matches
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Additional tabs for Matching and Matched would follow same pattern -->
+            <div id="matchingRequests" class="tab-content" style="display: none;">
+                <!-- Similar table for requests with status "Matching" -->
+            </div>
+            
+            <div id="matchedRequests" class="tab-content" style="display: none;">
+                <!-- Similar table for requests with status "Matched" -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Match Modal -->
+    <div id="matchModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Smart Matching Results</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Request Details Card -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h4 class="card-title">Request Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h4 id="requestTitle">Residential Plumbing Installation</h4>
+                                <p><i class="fas fa-map-marker-alt"></i> <span id="requestLocation">Nairobi, Kenya</span></p>
+                                <p id="requestDescription">Need a professional plumber for complete plumbing installation in a new 3-bedroom house. Work includes water supply lines, drainage, and fixture installation.</p>
+                                <div>
+                                    <strong>Requirements:</strong>
+                                    <ul id="requestRequirements">
+                                        <li>Licensed plumber</li>
+                                        <li>5+ years experience</li>
+                                        <li>Available immediately</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Client:</strong> <span id="requestClient">John Doe</span></p>
+                                <p><strong>Service Type:</strong> <span id="requestType" class="tag tag-blue">Plumbing</span></p>
+                                <p><strong>Urgency:</strong> <span id="requestUrgency" class="tag tag-red">High</span></p>
+                                <p><strong>Budget:</strong> <span id="requestBudget">$1,000 - $1,500</span></p>
+                                <p><strong>Posted:</strong> <span id="requestDate">2023-05-15</span></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4>Matched Service Providers</h4>
+                
+                <!-- Matched Providers List -->
+                <div class="providers-list">
+                    <!-- This will be populated dynamically via JavaScript -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary modal-cancel">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

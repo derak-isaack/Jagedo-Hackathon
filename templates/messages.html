@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Messages Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2 class="mb-1">
+                                <i class="fas fa-envelope me-2"></i>
+                                Messages
+                            </h2>
+                            <p class="mb-0 opacity-75">
+                                Communicate with other construction professionals
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('provider_network') }}" class="btn btn-light">
+                                <i class="fas fa-users me-1"></i>Find Professionals
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Message List -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-inbox me-2"></i>Conversations
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    {% if conversations %}
+                        {% for conversation in conversations %}
+                            <div class="conversation-item p-3 border-bottom {{ 'bg-light' if conversation.thread_id == selected_thread else '' }}"
+                                 style="cursor: pointer;" 
+                                 onclick="location.href='{{ url_for('messages', thread=conversation.thread_id) }}'">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar me-3">
+                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">
+                                            {% if conversation.sender_id == current_user.id %}
+                                                {{ conversation.recipient.username }}
+                                            {% else %}
+                                                {{ conversation.sender.username }}
+                                            {% endif %}
+                                        </h6>
+                                        <p class="text-muted small mb-1">{{ conversation.subject or 'No subject' }}</p>
+                                        <p class="text-muted small mb-0">{{ conversation.created_at.strftime('%b %d, %I:%M %p') }}</p>
+                                    </div>
+                                    {% if not conversation.is_read and conversation.recipient_id == current_user.id %}
+                                        <span class="badge bg-primary">New</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-envelope-open fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No conversations yet</p>
+                            <a href="{{ url_for('provider_network') }}" class="btn btn-primary btn-sm">
+                                Start Networking
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Thread -->
+        <div class="col-lg-8">
+            {% if selected_thread and thread_messages %}
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div>
+                                <h6 class="mb-0">{{ thread_messages[0].subject or 'No subject' }}</h6>
+                                <small class="text-muted">
+                                    Conversation with 
+                                    {% if thread_messages[0].sender_id == current_user.id %}
+                                        {{ thread_messages[0].recipient.username }}
+                                    {% else %}
+                                        {{ thread_messages[0].sender.username }}
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#replyModal">
+                                <i class="fas fa-reply"></i> Reply
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                        {% for message in thread_messages %}
+                            <div class="message mb-3 {{ 'text-end' if message.sender_id == current_user.id else '' }}">
+                                <div class="d-inline-block p-3 rounded {{ 'bg-primary text-white' if message.sender_id == current_user.id else 'bg-light' }}"
+                                     style="max-width: 70%;">
+                                    <p class="mb-1">{{ message.content|nl2br }}</p>
+                                    <small class="opacity-75">
+                                        {{ message.sender.username }} • {{ message.created_at.strftime('%b %d, %I:%M %p') }}
+                                    </small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Select a conversation</h5>
+                        <p class="text-muted">Choose a conversation from the left to view messages</p>
+                        <a href="{{ url_for('provider_network') }}" class="btn btn-primary">
+                            <i class="fas fa-users me-1"></i>Find Professionals to Message
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Reply Modal -->
+<div class="modal fade" id="replyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('send_reply', recipient_id=thread_recipient_id) }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Send Reply</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    {% if selected_thread %}
+                        <input type="hidden" name="thread_id" value="{{ selected_thread }}">
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Message</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" 
+                                  placeholder="Type your message..." required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>Send Message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.conversation-item:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+}
+
+.message {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+{% endblock %}

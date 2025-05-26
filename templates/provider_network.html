@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Service Provider Network - Construction Platform{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Network Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h2 class="mb-1">
+                        <i class="fas fa-users me-2"></i>
+                        Service Provider Network
+                    </h2>
+                    <p class="mb-0 opacity-75">
+                        Connect and collaborate with other construction professionals
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Network Stats -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-handshake fa-2x text-success mb-2"></i>
+                    <h4 class="text-success">{{ connections|length }}</h4>
+                    <p class="text-muted mb-0">Your Connections</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-user-plus fa-2x text-primary mb-2"></i>
+                    <h4 class="text-primary">{{ pending_requests|length }}</h4>
+                    <p class="text-muted mb-0">Pending Requests</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-hammer fa-2x text-warning mb-2"></i>
+                    <h4 class="text-warning">{{ total_fundis }}</h4>
+                    <p class="text-muted mb-0">Fundis Available</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-hard-hat fa-2x text-info mb-2"></i>
+                    <h4 class="text-info">{{ total_professionals }}</h4>
+                    <p class="text-muted mb-0">Professionals Available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('provider_network') }}" class="row g-3" autocomplete="off">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" name="search" 
+                                   placeholder="Search by profession, skills, username..." 
+                                   value="{{ request.args.get('search', '') }}"
+                                   style="pointer-events: auto;">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="profession" style="pointer-events: auto;">
+                                <option value="">All Professions</option>
+                                <option value="fundi" {{ 'selected' if request.args.get('profession') == 'fundi' }}>Fundi</option>
+                                <option value="professional" {{ 'selected' if request.args.get('profession') == 'professional' }}>Professional</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control" name="location" 
+                                   placeholder="Location" 
+                                   value="{{ request.args.get('location', '') }}"
+                                   style="pointer-events: auto;">
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100" style="pointer-events: auto;">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Providers Grid -->
+    <div class="row">
+        {% if service_providers %}
+            {% for provider_data in service_providers %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="avatar me-3">
+                                    <i class="fas fa-user-circle fa-3x text-muted"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ provider_data.provider.username }}</h6>
+                                    {% if provider_data.provider.service_provider_profile %}
+                                        <span class="badge 
+                                            {% if provider_data.provider.service_provider_profile.profession == 'fundi' %}bg-primary
+                                            {% else %}bg-success{% endif %} mb-1">
+                                            {{ provider_data.provider.service_provider_profile.profession|title }}
+                                        </span>
+                                        {% if provider_data.provider.service_provider_profile.verification_status == 'verified' %}
+                                            <span class="badge bg-success ms-1">
+                                                <i class="fas fa-check-circle"></i> Verified
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if provider_data.provider.service_provider_profile %}
+                                {% set profile = provider_data.provider.service_provider_profile %}
+                                
+                                {% if profile.specialization %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-tools me-1"></i>{{ profile.specialization }}
+                                    </p>
+                                {% endif %}
+                                
+                                {% if profile.experience_years %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-calendar me-1"></i>{{ profile.experience_years }} years experience
+                                    </p>
+                                {% endif %}
+                                
+                                {% if profile.location %}
+                                    <p class="text-muted small mb-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ profile.location }}
+                                    </p>
+                                {% endif %}
+
+                                {% if profile.skills %}
+                                    <div class="mb-3">
+                                        <small class="text-muted">Skills:</small>
+                                        <div class="mt-1">
+                                            {% for skill in profile.skills.split(',')[:3] %}
+                                                <span class="badge bg-light text-dark me-1 mb-1">{{ skill.strip() }}</span>
+                                            {% endfor %}
+                                            {% if profile.skills.split(',')|length > 3 %}
+                                                <span class="badge bg-light text-dark">+{{ profile.skills.split(',')|length - 3 }} more</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endif %}
+
+                                {% if profile.hourly_rate %}
+                                    <p class="text-success mb-3">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        <strong>${{ profile.hourly_rate }}/hour</strong>
+                                    </p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="card-footer bg-light">
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('service_provider_dashboard', provider_id=provider_data.provider.id) }}" 
+                                   class="btn btn-outline-primary btn-sm flex-fill">
+                                    <i class="fas fa-eye"></i> View Profile
+                                </a>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#messageModal{{ provider_data.provider.id }}">
+                                    <i class="fas fa-envelope"></i> Message
+                                </button>
+                                
+                                <!-- Modal Structure -->
+                                <div class="modal fade" id="messageModal{{ provider_data.provider.id }}" tabindex="-1" aria-labelledby="messageModalLabel{{ provider_data.provider.id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="messageModalLabel{{ provider_data.provider.id }}">Send Message to {{ provider_data.provider.username }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form method="POST" action="{{ url_for('send_reply') }}">
+                                                    <input type="hidden" name="recipient_id" value="{{ provider_data.provider.id }}">
+                                                    <div class="mb-3">
+                                                        <label for="messageContent{{ provider_data.provider.id }}" class="form-label">Message</label>
+                                                        <textarea class="form-control" id="messageContent{{ provider_data.provider.id }}" name="content" rows="3" required></textarea>
+                                                    </div>
+                                                    <button type="submit" class="btn btn-primary">Send</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">No service providers found</h5>
+                    <p class="text-muted">Try adjusting your search criteria</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Pagination -->
+    {% if service_providers|length >= 12 %}
+        <div class="row">
+            <div class="col-12">
+                <nav aria-label="Service providers pagination">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item">
+                            <a class="page-link" href="#" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                        <li class="page-item"><a class="page-link" href="#">2</a></li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

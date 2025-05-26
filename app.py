@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from markupsafe import Markup
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -16,8 +17,17 @@ db = SQLAlchemy(model_class=Base)
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET")
+app.secret_key = os.environ.get("SECRET_KEY", "your-secret-key")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
+
+
+@app.template_filter('nl2br')
+def nl2br_filter(s):
+    if not s:
+        return ''
+    escaped = Markup.escape(s)
+    return Markup(escaped.replace('\n', '<br>\n'))
+
 
 # Configure the database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///app.db")
