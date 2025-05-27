@@ -33,10 +33,20 @@ With AI-powered smart matching, our system improves **accuracy**, reduces **time
 - 🔍 **Real-Time Search & Filtering**
 - 🧯 **Auto-Save Drafts**
 - 🎯 **Role-Based Workflows for Clients & Professionals**
+- 📱 **Communication System**
+  - In-platform messaging
+  - Automated notifications
+  - Service provider networking
 
----
-
-## 🛠️ Tech Stack
+- 👥 User Management
+  - 🔑 Role-based access control (Customer, Fundi, Professional, Admin)
+  - ✅ Profile verification system
+  - 📋 Document validation
+- 💼 Job Management
+  - Comprehensive job posting system
+  - Real-time matching notifications
+  - Application tracking---
+## 🛠️ Tech Stack 
 
 | Layer       | Tools / Frameworks |
 |-------------|---------------------|
@@ -69,23 +79,5 @@ With AI-powered smart matching, our system improves **accuracy**, reduces **time
 ---
 
 
-## Key Components
-### AI Matching System
-- Smart matching algorithm using Google's Generative AI
-  - Deep learning models for pattern recognition
-  - Natural language understanding capabilities
-  - Continuous learning from feedback loops
-- Multi-factor matching considering skills, location, and budget
-- Automated initial eligibility checking
-### User Management
-- Role-based access control (Customer, Fundi, Professional, Admin)
-- Profile verification system
-- Document validation
-### Job Management
-- Comprehensive job posting system
-- Real-time matching notifications
-- Application tracking
-### Communication System
-- In-platform messaging
-- Automated notifications
-- Service provider networking
+
+
